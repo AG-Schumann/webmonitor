@@ -1,0 +1,61 @@
+{% load staticfiles %}
+<style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+</style>
+
+<html>
+    <head>
+        <title>Doberview</title>
+<!--
+        <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+-->
+        <meta charset='utf-8'>
+        <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    </head>
+    <div id="headerBar"></div>
+
+    <body>
+        <!-- header -->
+        <header>
+            <h1>Doberview</h1>
+            <h2>{% block subtitle %}{% endblock %}</h2>
+        </header>
+
+        <!-- menu bar on left -->
+        <div id="cssmenu">
+ 32         </ul>
+ 33     </div>
+"detail.html" 96L, 3775C written                                                     23,91         13%
+            <ul>
+                <li><a href="{% url 'index' %}"><span>Home</span></a></li>
+                <li class='active has-sub'><a href="{% url 'index' %}"><span><Controllers</span></a>
+                    <ul>
+                        {% for name in controller_list %}
+                            <li class='last'><a href="{% url 'index' %}detail/{{ name }}/"><span>{{ name }}</span></a></li>
+                        {% empty %}
+                            <p>No controllers available!</p>
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li><a href="{% url 'index' %}monitor/"><span>Plotter</span></a></li>
+            </ul>
+            {% block sidebar %}
+            {% endblock %}
+        </div>
+
+        <!-- main section -->
+        <section>
+            {% block content %}
+            {% endblock %}
+        </section>
+    </body>
+
+    {% block javascript %}
+    {% endblock %}
+
+</html>

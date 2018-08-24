@@ -1,0 +1,96 @@
+{% extends "doberview/base.html" %}
+<!-- detail.html -->
+
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+{% block subtitle %}Controller detail: {{ detaildoc.name }}{% endblock %}
+
+{% block sidebar %}
+    <div>
+        <ul>
+        <form>
+            <li><div>Select Data:
+                <select width="15px" id="dropdown_data" name="dropdown_data">
+                    {% for desc in detaildoc.description %}
+                        <option value="{{ forloop.counter  }}">{{ forloop.counter}}: {{ desc }}</option>
+                    {% empty %}
+                        <p>No data!</p>
+                    {% endfor %}
+                </select>
+            </div></li>
+
+            <li><div>Select time range:
+                <form><input type="number" name="time_num" size="2" value="1" maxlength="3"></form>
+                <select id="dropdown_time" name="dropdown_time">
+                    <option value="hr">hour(s)</option>
+                    <option value="day">day(s)</option>
+                    <option value="wk">week(s)</option>
+                    <option value="mo">month(s)</option>
+                </select>
+            </div></li>
+            <input type="plot" value="Plot">
+        </form>
+        </ul>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div style="background-color:#eeeeee;padding:5px;border-radius:5px">
+        <h2 style="background-color:#dddddd;padding:2px;border-radius:2px">Controller overview</h2>
+        <table style="width:100%">
+            <tr><th>Quantity</th><th>Value</th></tr>
+                {% for name, value in detaildoc.items %}
+                <tr><td>{{ name }}</td><td>{{ value }}</td></tr>
+                {% endfor %}
+        </table>
+    </div>
+    <br>
+
+    <div id="chart_div" style="display:inline-block; width:85%; height:48%;"</div>
+
+{% endblock %}
+
+{% block javascript %}
+    <script type="text/javascript">
+        google.charts.load('current', {packages: ['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart(){
+            var data_index = document.getElementById('dropdown_data');
+            var howmany = document.getElementById('time_num');
+            var which = document.getElementById('dropdown_time');
+            var url = 'getdata/' + {{ detaildoc.name }} + '/' + data_index + '/';
+            url += howmany + which;
+            var points = new google.visualization.DataTable();
+            points.addColumn('datetime', 'Time');
+            points.addColumn('number', 'Values');
+            points.addColumn('number', 'Low warning');
+            points.addColumn('number', 'Low alarm');
+            points.addColumn('number', 'High warning');
+            points.addColumn('number', 'High alarm');
+            var options = {};
+            $.getJSON(url, function(data) {
+                var numpts = data['x'].length
+                var warn_low = data['levels']['warn_low'];
+                var alarm_low = data['levels']['alarm_low'];
+                var warn_high = data['levels']['warn_high'];
+                var alarm_high = data['levels']['alarm_high'];
+                for (var i = 0; i < numpts; i+=1) {
+                    points.addRow([new Date(data['x'][i]), data['y'][i], warn_low, alarm_low, warn_high, alarm_high]);
+                }
+                options['title'] = data['desc'];
+            });
+            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+            chart.draw(data,options);
+        }
+       /* function update(){
+            UpdateOverview();
+            UpdateLogs();
+            UpdateAlarms();
+            setTimeout(update, 10000); // 10 second loop
+        }*/
+        // start the loop when the page loads
+        window.onload = drawChart();
+
+    </script>
+{% endblock %}
