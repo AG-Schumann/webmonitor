@@ -63,6 +63,19 @@ def overviewdocs():
                 rows['%s_row_%i' % (name, i)] = '<tr>' + value_chunk + '</tr>'
             else:
                 rows['%s_row_%i' % (name, i)] = docrow + value_chunk + '</tr>'
+    doberdoc = client['settings']['defaults'].find_one()
+    if 'heartbeat' in doberdoc:
+        heartbeat = doberdoc['heartbeat']
+        runmode = doberdoc['runmode']
+        rows['doberman'] = '<tr><td>Doberman</td><td>' + runmode + '</td>'
+        if doberdoc['status'] in ['online','sleep']:
+            stat = doberdoc['status']
+            colors = {'online' : '#00DD00','sleep' : '#FF7F00'}
+            rows['doberman'] += '<td style="color:%s">%s</td><td>%s</td>' % (colors[stat], stat, heartbeat.strftime("%Y-%m-%d %H:%M:%S"))
+            rows['doberman'] += '<td colspan=5> </td>'
+        else:
+            rows['doberman'] += '<td style="color:#DD0000">offline</td><td colspan=6> </td>'
+        rows['doberman'] += '</tr>'
     client.close()
     return rows
 
@@ -105,6 +118,26 @@ def getlogs(request):
 def getoverview(request):
     return JsonResponse(overviewdocs())
 
+def detailtable(request, name):
+    client = MongoClient(os.environ['MONITOR_URI'])
+    doc = client['settings']['controllers'].find_one({'name' : name})
+    reading_front = '<tr><td rowspan={num_rm}>{desc}</td>'
+    reading_body = '<td>{rm}</td><td>{al}</td><td>{wl}</td><td>{st}</td><td>{wh}</td><td>{ah}</td></tr>'
+    reading_table = ''
+    for i,desc in enumerate(doc['description']):
+        rf = reading_front.format(num_rm = len(doc['status']), desc=desc)
+        rb = ''
+        for j, rm in enumerate(list(doc['status'].keys())):
+            rb += '<tr>' if j else ''
+            rb += reading_body.format(rm=rm,al=doc['alarm_low'][rm][i],
+                    wl=doc['warning_low'][rm][i],
+                    st=doc['alarm_status'][rm][i],
+                    wh=doc['warning_high'][rm][i],
+                    ah=doc['alarm_high'][rm][i])
+        reading_table += rf + rb
+    client.close()
+    return JsonResponse({'table_content' : reading_table})
+
 def index(request):
     client = MongoClient(os.environ['MONITOR_URI'])
     docs = {}
@@ -117,11 +150,17 @@ def detail(request, name):
     client = MongoClient(os.environ['MONITOR_URI'])
     fulldoc = client['settings']['controllers'].find_one({'name' : name})
     fields = ['name','status','alarm_status','warning_low','warning_high','alarm_low','alarm_high',
-            'description','additional_params','runmode','online']
+            'description','runmode','online']
     doc = {f : fulldoc[f] for f in fields}
+    if 'additional_params' in fulldoc:
+        doc['additional_params'] = fulldoc['additional_params']
     names = client['settings']['controllers'].distinct('name')
+    detaildoc = {}
+    detaildoc['detail'] = ''
+    detaildoc['description'] = fulldoc['description']
+    detaildoc['name'] = name
     client.close()
-    return render(request, 'doberview/detail.html', {'detaildoc': doc, 'controller_list' : names})
+    return render(request, 'doberview/detail.html', {'detaildoc' : detaildoc, 'controller_list' : names})
 
 def getdata(request, name, data_index, sincewhen):
     client = MongoClient(os.environ['MONITOR_URI'])

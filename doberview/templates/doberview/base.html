@@ -14,7 +14,9 @@ table, th, td {
 -->
         <meta charset='utf-8'>
         <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
-        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <!--    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> -->
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        {% block LoadPlots %}{% endblock %}
 
     </head>
     <div id="headerBar"></div>
@@ -22,18 +24,15 @@ table, th, td {
     <body>
         <!-- header -->
         <header>
-            <h1>Doberview</h1>
+            <h1>Doberview!</h1>
             <h2>{% block subtitle %}{% endblock %}</h2>
         </header>
 
         <!-- menu bar on left -->
         <div id="cssmenu">
- 32         </ul>
- 33     </div>
-"detail.html" 96L, 3775C written                                                     23,91         13%
             <ul>
                 <li><a href="{% url 'index' %}"><span>Home</span></a></li>
-                <li class='active has-sub'><a href="{% url 'index' %}"><span><Controllers</span></a>
+                <li><span>Controllers</span></li>
                     <ul>
                         {% for name in controller_list %}
                             <li class='last'><a href="{% url 'index' %}detail/{{ name }}/"><span>{{ name }}</span></a></li>
@@ -41,8 +40,7 @@ table, th, td {
                             <p>No controllers available!</p>
                         {% endfor %}
                     </ul>
-                </li>
-                <li><a href="{% url 'index' %}monitor/"><span>Plotter</span></a></li>
+                    <!-- <li><a href="{% url 'index' %}monitor/"><span>Plotter</span></a></li> -->
             </ul>
             {% block sidebar %}
             {% endblock %}

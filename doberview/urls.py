@@ -8,5 +8,6 @@ urlpatterns = [
         path('getalarms', views.getalarms, name='getalarms'),
         path('getlogs', views.getlogs, name='getlogs'),
         re_path(r'^detail/(?P<name>[^/]+)/$', views.detail, name='detail'),
+        re_path(r'^detail/(?P<name>[^/]+)/gettable/$', views.detailtable, name='detailtable'),
         re_path(r'^getdata/(?P<name>[^/]+)/(?P<data_index>[0-9]+)/(?P<sincewhen>(?:[0-9]{1,4})(?:hr|day|wk|mo))/$', views.getdata, name='getdata'),
         ]
