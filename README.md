@@ -21,15 +21,19 @@ For Ubuntu 18.04.
     * If the directories `./etc/conda/activate.d` and `./etc/conda/deactivate.d` don't exist, make them.
     * Make a bash script in each with a name like `env_vars.sh`
     * `activate.d/env_vars.sh`:
-        * ```#!/bin/bash
-           export MONITOR_URI=<mongo uri>
-           export DJANGO_KEY=<django key>```
+```
+#!/bin/bash
+export MONITOR_URI=<mongo uri>
+export DJANGO_KEY=<django key>
+```
         * `<mongo uri>` is the MongoDB URI to connect to the database (`mongodb://username:password@host:port/admin` - a read-only account is recommended for this)
         * `<django key>` is the Django key with which your website secures itself
     * `deactivate.d/env_vars.sh`:
-        * ```#!/bin/bash
-           unset MONITOR_URI
-           unset DJANGO_KEY```
+```
+#!/bin/bash
+unset MONITOR_URI
+unset DJANGO_KEY
+```
 * Download this package: `git clone https://github.com/ag-schumann/webmonitor.git`
 * Add your host to the `allowed_hosts` entry in `webmonitor/settings.py`
 
