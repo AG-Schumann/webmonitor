@@ -20,62 +20,49 @@ def overviewdocs():
 
     for doc in client['settings']['controllers'].find({}):
         name = doc['name']
-        nval = int(doc['number_of_data'])
-        descs = doc['description']
+        nval = len(doc['readings'])
         runmode = doc['runmode']
-        alarm_status = doc['alarm_status'][runmode]
-        if doc['online']:
-            if doc['status'][runmode] != 'ON':
-                status = 'sleep'
-                color = '#FF7F00'
-            else:
-                status = 'online'
-                color = '#00DD00'
-        else:
-            status = 'offline'
-            color = '#DD0000'
-
+        status = doc['status']
+        colors = {
+                'sleep' : '#FF7F00',
+                'online' : '#00DD00',
+                'offline' : '#DD0000'
+        }
         if status == 'online':
-            warns_low = doc['warning_low'][runmode]
-            warns_high = doc['warning_high'][runmode]
             for row in client['data'][name].find({},sort=[('when',-1)],limit=1):
                 when = row['when'].strftime("%Y-%m-%d %H:%M:%S")
                 try:
-                    values = list(map('{:.2f}'.format, row['data']))
-                except ValueError:
+                    values = list(map('{:.3g}'.format, row['data']))
+                except (ValueError, TypeError):
                     values = ['-']*nval
                 stats = row['status']
         else:
-            warns_low = ['-']*nval
-            warns_high = ['-']*nval
             stats = ['-']*nval
             when = '-'
             values = ['-']*nval
 
         docrow = docrow_base.format(nval=nval,name=name,runmode=runmode,
-                color=color,when=when,status=status)
-        for i in range(nval):
-            al=alarm_status[i]
-            value_chunk = value_base.format(warn_low=warns_low[i] if al=='ON' else '-',
-                    value=values[i], warn_high=warns_high[i] if al=='ON' else '-',
-                    desc=descs[i], stat=stats[i])
+                color=colors[status],when=when,status=status)
+        for i,reading in enumerate(doc['readings']):
+            al=reading['level'][runmode]
+            value_chunk = value_base.format(warn_low=reading['alarms'][al][0] if al>=0 else '-',
+                    value=values[i], warn_high=reading['alarms'][al][1] if al>=0 else '-',
+                    desc=reading['description'], stat=stats[i])
             if i:
                 rows['%s_row_%i' % (name, i)] = '<tr>' + value_chunk + '</tr>'
             else:
                 rows['%s_row_%i' % (name, i)] = docrow + value_chunk + '</tr>'
     doberdoc = client['settings']['defaults'].find_one()
-    if 'heartbeat' in doberdoc:
-        heartbeat = doberdoc['heartbeat']
-        runmode = doberdoc['runmode']
-        rows['doberman'] = '<tr><td>Doberman</td><td>' + runmode + '</td>'
-        if doberdoc['status'] in ['online','sleep']:
-            stat = doberdoc['status']
-            colors = {'online' : '#00DD00','sleep' : '#FF7F00'}
-            rows['doberman'] += '<td style="color:%s">%s</td><td>%s</td>' % (colors[stat], stat, heartbeat.strftime("%Y-%m-%d %H:%M:%S"))
-            rows['doberman'] += '<td colspan=5> </td>'
-        else:
-            rows['doberman'] += '<td style="color:#DD0000">offline</td><td colspan=6> </td>'
-        rows['doberman'] += '</tr>'
+    heartbeat = doberdoc['heartbeat']
+    runmode = doberdoc['runmode']
+    rows['doberman'] = '<tr><td>Doberman</td><td>' + runmode + '</td>'
+    if doberdoc['status'] in ['online','sleep']:
+        stat = doberdoc['status']
+        rows['doberman'] += '<td style="color:%s">%s</td><td>%s</td>' % (colors[stat], stat, heartbeat.strftime("%Y-%m-%d %H:%M:%S"))
+        rows['doberman'] += '<td colspan=5> </td>'
+    else:
+        rows['doberman'] += '<td style="color:#DD0000">offline</td><td colspan=6> </td>'
+    rows['doberman'] += '</tr>'
     client.close()
     return rows
 
@@ -88,7 +75,7 @@ def getalarms(request):
         docs.append({
             'when' : row['when'].strftime("%Y-%m-%d %H:%M:%S"),
             'name' : row['name'],
-            'message' : row['msg'],
+            'message' : row['msg'].replace("<","").replace(">",""),
             })
     client.close()
     return JsonResponse(docs, safe=False)
@@ -110,7 +97,7 @@ def getlogs(request):
             'when' : row['when'].strftime("%Y-%m-%d %H:%M:%S"),
             'level' : levels[int(row['level'])],
             'name' : row['name'],
-            'message' : row['msg'],
+            'message' : row['msg'].replace("<","").replace(">",""),
         })
     client.close()
     return JsonResponse(docs, safe=False)
@@ -142,7 +129,7 @@ def index(request):
     client = MongoClient(os.environ['MONITOR_URI'])
     docs = {}
     for row in client['settings']['controllers'].find({}).sort([('name', 1)]):
-        docs[row['name']] = list(range(int(row['number_of_data'])))
+        docs[row['name']] = list(range(len(row['readings'])))
     client.close()
     return render(request, 'doberview/index.html', {'controller_list': docs})
 

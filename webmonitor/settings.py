@@ -25,7 +25,7 @@ SECRET_KEY = os.environ['DJANGO_KEY']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['http://10.4.73.167','localhost']
+ALLOWED_HOSTS = ['localhost']
 os.environ['DJANGO_SETTINGS_MODULE'] = 'webmonitor.settings'
 
 # Application definition
