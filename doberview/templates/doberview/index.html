@@ -7,8 +7,8 @@
     <div style="background-color:#eeeeee;padding:5px;border-radius:5px">
         <h2 style="background-color:#dddddd;padding:2px;border-radius:2px">Sensor status overview</h2>
         {% for name in sensors %}
-            <table style="width:100%">
-                <thead style="width:100%">
+            <table>
+                <thead>
                     <tr>
                         <th colspan="4" id="{{ name }}_head">{{ name }}</th>
                     </tr>
@@ -19,7 +19,7 @@
                         <th>Runmode</th>
                     </tr>
                 </thead>
-                <tbody style="width:100%" id="{{ name }}_body">
+                <tbody id="{{ name }}_body">
                     <tr><td colspan="4">Loading!</td></tr>
                 </tbody>
             </table>
@@ -28,7 +28,7 @@
     <br>
     <div style="background-color:#eeeeee:padding:30px">
         <h2 style="background-color:#dddddd">Recent log entries</h2>
-        <table style="width:100%">
+        <table>
             <thead>
                 <tr>
                     <th>Time</th>
@@ -43,7 +43,7 @@
     <br>
     <div style="background-color:#eeeeee:padding:40px">
         <h2 style="background-color:#dddddd">Recent alarms</h2>
-        <table style="width:100%">
+        <table>
             <tr>
                 <th>Time</th>
                 <th>Name</th>

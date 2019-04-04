@@ -23,7 +23,7 @@ urlpatterns = [
              views_get.getlogs,
              name='getlogs'),
 
-        re_path(r'^detail/(?P<name>[^/]+)/$',
+        re_path(r'^detail/(?P<name>[^/]+)/(?:(?P<error_code>[^/]+)/)?$',
                 views_render.detail,
                 name='detail'),
 

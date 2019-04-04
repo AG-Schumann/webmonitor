@@ -4,9 +4,9 @@
 {% block subtitle %}Sensor detail: {{ sensordoc.name }}{% endblock %}
 
 {% block content %}
-{% if document_message %}
+{% if error_msg %}
 <div>
-    <h3 style="color:#ee0000">{{ document_message }}</h3>
+    <h3 style="color:#ee0000">{{ error_msg }}</h3>
 </div>
 {% endif %}
 <form action="{% url 'startstop' name=sensordoc.name %}" method="post">
@@ -33,7 +33,7 @@
     <fieldset>
         <legend id="rd_legend">No reading selected</legend>
         Variable name: <input type="text" id="rd_name" name="name" disabled><br>
-        <select name="runmode" id="rd_runmode"></select>
+        Runmode: <select name="runmode" id="rd_runmode"></select><br>
         Alarm recurrence: <input type="number" min="1" max="99" step="1" id="rd_alrec" name="alarm_rec"><br>
         Readout interval (seconds): <input type="number" min="5" max="300" step="1" id="rd_roi" name="readout_interval"><br>
         Alarms:
@@ -57,7 +57,7 @@
             SerialID: <input type="text" name="serialID" value="{{ sensordoc.address.serialID }}"><br>
             Serial address: <input type="text" name="tty" pattern="\\b(?:(?:USB|S)[1-9]?[0-9])\\b" value="{{ sensordoc.address.tty }}"><br>
             Baud: <select name="baud">
-                {% for baud in 9600 19200 38400 57600 %}
+                {% for baud in baudrates %}
                     {% if sensordoc.address.baud == baud %}
                         <option value="{{ baud }}" selected>{{ baud }}</option>
                     {% else %}
@@ -68,6 +68,7 @@
         {% else %}
             No address info!
         {% endif %}
+        <br>
         <input type="submit" value="Submit"><input type="reset">
     </fieldset>
 </form>

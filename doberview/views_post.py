@@ -1,5 +1,6 @@
 from django.http import JsonResponse, HttpResponseNotModified
 from django.views.decorators.http import require_POST
+from django.shortcuts import redirect
 
 import datetime
 import time
@@ -76,26 +77,26 @@ def change_reading(request, name=""):
     old_vals = base.db.GetReading(name, reading_name)
     user = client(request.META)
     print(user)
-    if old_vals['readout_interval'] != new_vals['rd_roi']:
-        print('Readout interval: ', new_vals['rd_roi'])
-        #base.db.UpdateReading(name, reading_name, 'readout_interval', new_vals['rd_roi'])
-        #base.db.LogUpdate(f'{name}-{reading_name}.readout_interval', new_vals['rd_roi'],
+    if old_vals['readout_interval'] != new_vals['readout_interval']:
+        print('Readout interval: ', new_vals['readout_interval'])
+        #base.db.UpdateReading(name, reading_name, 'readout_interval', new_vals['readout_interval'])
+        #base.db.LogUpdate(f'{name}-{reading_name}.readout_interval', new_vals['readout_interval'],
         #        user)
-    if old_vals['recurrence'] != new_vals['rd_alrec']:
-        print('Recurrence: ', new_vals['rd_alrec'])
-        #base.db.UpdateReading(name, reading_name, 'recurrence', new_vals['rd_alrec'])
-        #base.db.LogUpdate(f'{name}-{reading_name}.recurrence', new_vals['rd_alrec'], user)
+    if old_vals['recurrence'] != new_vals['alarm_rec']:
+        print('Recurrence: ', new_vals['alarm_rec'])
+        #base.db.UpdateReading(name, reading_name, 'recurrence', new_vals['alarm_red'])
+        #base.db.LogUpdate(f'{name}-{reading_name}.recurrence', new_vals['alarm_rec'], user)
     if old_vals['runmode'] != new_vals['runmode']:
         print('Runmode: ', new_vals['runmode'])
         #base.db.UpdateReading(name, reading_name, 'runmode', new_vals['runmode'])
         #base.db.LogUpdate(f'{name}.runmode', new_vals['runmode'], user)
     alarms = []
     for lvl in range(len(old_vals['alarms'])):
-        alarms = [new_vals[f'al_{lvl}_0']] + alarms + [new_vals[f'al_{lvl}_1']]
+        alarms = [float(new_vals[f'al_{lvl}_0'])] + alarms + [float(new_vals[f'al_{lvl}_1'])]
     for i in range(len(alarms)-1):
         if alarms[i] >= alarms[i+1]:
-            return redirect('detail', name=name,
-                    context=detail_context(document_message='Invalid alarm values'))
+            print(f'Alarm {i}-{i+1} invalid')
+            return redirect(f'/doberview/detail/{name}/01/')
     print(alarms)
     del alarms
     for lvl, alarms in enumerate(old_vals['alarms']):
