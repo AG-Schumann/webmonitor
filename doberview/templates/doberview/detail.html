@@ -1,112 +1,90 @@
 {% extends "doberview/base.html" %}
 <!-- detail.html -->
 
-{% block LoadPlots %}
-    <script type="text/javascript">
-        google.charts.load('current', {packages: ['corechart']});
-        google.charts.setOnLoadCallback(drawChart);
-    </script>
-{% endblock %}
-
-{% block subtitle %}Controller detail: {{ detaildoc.name }}{% endblock %}
-
-{% block sidebar %}
-    <div>
-        <ul>
-        <form>
-            <li><div>Select Data:
-                <select width="15px" id="dropdown_data" name="dropdown_data">
-                    {% for desc in detaildoc.description %}
-                        <option value="{{ forloop.counter  }}">{{ forloop.counter}}: {{ desc }}</option>
-                    {% empty %}
-                        <p>No data!</p>
-                    {% endfor %}
-                </select>
-            </div></li>
-
-            <li><div>Select time range: (1)
-                <form><input type="range" name="time_num" step="1" value="5" min="1" max="10"></form> (10)
-                <select id="dropdown_time" name="dropdown_time">
-                    <option value="hr">hour(s)</option>
-                    <option value="day">day(s)</option>
-                    <option value="wk">week(s)</option>
-                    <option value="mo">month(s)</option>
-                </select>
-            </div></li>
-            <input type="submit" value="Plot">
-        </form>
-        </ul>
-    </div>
-{% endblock %}
+{% block subtitle %}Sensor detail: {{ sensordoc.name }}{% endblock %}
 
 {% block content %}
-    <div id="controller_name">{{ detaildoc.name }}</div>
-    <div style="background-color:#eeeeee;padding:5px;border-radius:5px">
-        <h2 style="background-color:#dddddd;padding:2px;border-radius:2px">Controller overview</h2>
-        <table style="width:100%">
-            <tr><th colspan="7">Alarms/Warnings</th></tr>
-            <tr>
-                <th>Description</th>
-                <th>Runmode</th>
-                <th>Alarm low</th>
-                <th>Warning low</th>
-                <th>Status</th>
-                <th>Warning high</th>
-                <th>Alarm high</th>
-            </tr>
-            <tbody id="reading_table"></tbody>
-        </table>
-    </div>
-    <br>
+{% if document_message %}
+<div>
+    <h3 style="color:#ee0000">{{ document_message }}</h3>
+</div>
+{% endif %}
+<form action="{% url 'startstop' name=sensordoc.name %}" method="post">
+    {% csrf_token %}
+    <fieldset>
+        <legend id="status_legend">Current status: {{ sensordoc.status }}</legend>
+        {% if sensordoc.status == 'online' %}
+            <input type="submit" id="startbtn" value="Stop">
+        {% else %}
+            <input type="submit" id="startbtn" value="Start">
+        {% endif %}
+    </fieldset>
+</form>
+<br>
 
-    <div id="chart_div" style="display:inline-block; width:85%; height:48%;"></div>
+<form action="{% url 'change_reading' name=sensordoc.name %}" method="post">
+    {% csrf_token %}
+    <select name="reading_name" id="reading_dropdown">
+        <option value="" selected>Select reading</option>
+        {% for rd_name,desc in readings.items %}
+            <option value="{{ rd_name }}">{{ desc }}</option>
+        {% endfor %}
+    </select><br>
+    <fieldset>
+        <legend id="rd_legend">No reading selected</legend>
+        Variable name: <input type="text" id="rd_name" name="name" disabled><br>
+        <select name="runmode" id="rd_runmode"></select>
+        Alarm recurrence: <input type="number" min="1" max="99" step="1" id="rd_alrec" name="alarm_rec"><br>
+        Readout interval (seconds): <input type="number" min="5" max="300" step="1" id="rd_roi" name="readout_interval"><br>
+        Alarms:
+        <ul id="rd_alarm_list"></ul><br>
+        Config:
+        <ul id="rd_cfg_list"></ul>
+    <input type="submit" id="rdbtn" value="Submit">
+    <input type="reset">
+    </fieldset>
+</form>
+
+<form action="{% url 'change_address' name=sensordoc.name %}" method="post">
+    {% csrf_token %}
+    <fieldset>
+        <legend>Addressing</legend>
+        {% if sensordoc.address.ip %}
+            IP: <input type="text" name="ip" value="{{ sensordoc.address.ip }}"
+                pattern="\\b(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\b"><br>
+            Port: <input type="number" name="port" value="{{ sensordoc.address.port|stringformat:"d" }}" step="1"><br>
+        {% elif sensordoc.address.tty %}
+            SerialID: <input type="text" name="serialID" value="{{ sensordoc.address.serialID }}"><br>
+            Serial address: <input type="text" name="tty" pattern="\\b(?:(?:USB|S)[1-9]?[0-9])\\b" value="{{ sensordoc.address.tty }}"><br>
+            Baud: <select name="baud">
+                {% for baud in 9600 19200 38400 57600 %}
+                    {% if sensordoc.address.baud == baud %}
+                        <option value="{{ baud }}" selected>{{ baud }}</option>
+                    {% else %}
+                        <option value="{{ baud }}">{{ baud }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        {% else %}
+            No address info!
+        {% endif %}
+        <input type="submit" value="Submit"><input type="reset">
+    </fieldset>
+</form>
+
+<form action="{% url 'log_command' %}" method="post">
+    {% csrf_token %}
+    <fieldset>
+        <legend>Custom command</legend>
+        <input type="text" name="command"><br>
+        <input type="submit" value="Submit">
+    </fieldset>
+</form>
 
 {% endblock %}
 
 {% block javascript %}
-    <script type="text/javascript">
-        function drawTable(){
-            var name = document.getElementById('controller_name').innerHTML;
-            $.getJSON('gettable/', function(data) {
-                document.getElementById('reading_table').innerHTML=data['table_content'];
-            });
-        }
-
-        function drawChart(){
-            var data_index = document.getElementById('dropdown_data');
-            var howmany = document.getElementById('time_num');
-            var which = document.getElementById('dropdown_time');
-            var name = document.getElementById('controller_name');
-            var url = 'getdata/' + name + '/' + data_index + '/';
-            url += howmany + which;
-            var points = new google.visualization.DataTable();
-            points.addColumn('datetime', 'Time');
-            points.addColumn('number', 'Values');
-            points.addColumn('number', 'Low warning');
-            points.addColumn('number', 'Low alarm');
-            points.addColumn('number', 'High warning');
-            points.addColumn('number', 'High alarm');
-            var options = {};
-            $.getJSON(url, function(data) {
-                var numpts = data['x'].length
-                var warn_low = data['levels']['warn_low'];
-                var alarm_low = data['levels']['alarm_low'];
-                var warn_high = data['levels']['warn_high'];
-                var alarm_high = data['levels']['alarm_high'];
-                for (var i = 0; i < numpts; i+=1) {
-                    points.addRow([new Date(data['x'][i]), data['y'][i], warn_low, alarm_low, warn_high, alarm_high]);
-                }
-                options['title'] = data['desc'];
-            });
-            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-            chart.draw(data,options);
-        }
-        function stuff(){
-            drawTable();
-            drawChart();
-        }
-        // start the loop when the page loads
-        window.onload = stuff();
-
+    <script>
+        $('#reading_dropdown').change(function() {GetReadingDetails("{{ sensordoc.name }}", $(this).val())});
     </script>
 {% endblock %}

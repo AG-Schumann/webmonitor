@@ -1,0 +1,64 @@
+{% extends "doberview/base.html" %}
+<!-- trend.html -->
+
+{% block subtitle %}Recent trends{% endblock %}
+
+{% block content %}
+    <div id="mainchart" style="width:95%;height:95%"></div>
+    <div>
+        <table>
+            <tr>
+                <td>
+                    <select id="chart0name">
+                        <option value='none'>Select sensor</option>
+                        {% for name in sensors %}
+                            <option value="{{ name }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="chart0reading">
+                        <option value=''>Select reading</option>
+                    </select>
+                </td>
+                <td>
+                    <select id="chart1name">
+                        <option value='none'>Select sensor</option>
+                        {% for name in sensors %}
+                            <option value="{{ name }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="chart1reading">
+                        <option value=''>Select reading</option>
+                    </select>
+                </td>
+                <td>
+                    <select id="chart2name">
+                        <option value='none'>Select sensor</option>
+                        {% for name in sensors %}
+                            <option value="{{ name }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select id="chart2reading">
+                        <option value=''>Select reading</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        $("#chart0name").change(function() {PopulateReadingDropdown(0,($(this).val()))});
+        $("#chart1name").change(function() {PopulateReadingDropdown(1,($(this).val()))});
+        $("#chart2name").change(function() {PopulateReadingDropdown(2,($(this).val()))});
+        $('#chart0reading').change(function() {SetUserChart(0, $('#chart0name').val(),
+            $(this).val())});
+        $('#chart1reading').change(function() {SetUserChart(1, $('#chart1name').val(),
+            $(this).val())});
+        $('#chart2reading').change(function() {SetUserChart(2, $('#chart2name').val(),
+            $(this).val())});
+
+        //window.onload = DrawCharts();
+        //window.setInterval(UpdateCharts, 10000);
+    </script>
+{% endblock %}

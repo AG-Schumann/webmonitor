@@ -1,0 +1,35 @@
+<!-- base.html -->
+{% load static staticfiles %}
+
+<style>
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+</style>
+<html>
+    <head>
+        <title>XeBRA DAQ</title>
+        <meta charset="utf-8">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="{% static "control/scripts.js" %}"></script>
+
+    </head>
+    <div id="headerbar"></div>
+
+    <body>
+        <header>
+            <h1>XeBRA</h1>
+            <h2>{% block subtitle %}{% endblock %}</h2>
+        </header>
+
+        <section>
+            {% block content %}
+            {% endblock %}
+        </section>
+    </body>
+
+    {% block javascripts %}
+    {% endblock %}
+
+</html>

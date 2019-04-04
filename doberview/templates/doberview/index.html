@@ -5,28 +5,25 @@
 
 {% block content %}
     <div style="background-color:#eeeeee;padding:5px;border-radius:5px">
-        <h2 style="background-color:#dddddd;padding:2px;border-radius:2px">Controller status</h2>
-        <table style="width:100%">
-            <tr>
-                <th rowspan="2">Name</th>
-                <th rowspan="2">Runmode</th>
-                <th rowspan="2">Status</th>
-                <th colspan="6">Most recent measurements</th>
-            </tr><tr>
-                <th>Time</th>
-                <th>Low warning</th>
-                <th>Value</th>
-                <th>High warning</th>
-                <th>Description</th>
-                <th>Status</th>
-            </tr>
-            {% for name, nums in controller_list.items %}
-                {% for num in nums %}
-                    <tr id="{{ name }}_row_{{ num }}"></tr>
-                {% endfor %}
-            {% endfor %}
-            <tr id="doberman"></tr>
-        </table>
+        <h2 style="background-color:#dddddd;padding:2px;border-radius:2px">Sensor status overview</h2>
+        {% for name in sensors %}
+            <table style="width:100%">
+                <thead style="width:100%">
+                    <tr>
+                        <th colspan="4" id="{{ name }}_head">{{ name }}</th>
+                    </tr>
+                    <tr>
+                        <th>Description</th>
+                        <th>Time</th>
+                        <th>Value</th>
+                        <th>Runmode</th>
+                    </tr>
+                </thead>
+                <tbody style="width:100%" id="{{ name }}_body">
+                    <tr><td colspan="4">Loading!</td></tr>
+                </tbody>
+            </table>
+        {% endfor %}
     </div>
     <br>
     <div style="background-color:#eeeeee:padding:30px">
@@ -59,45 +56,12 @@
 
 {% block javascript %}
     <script type="text/javascript">
-        function UpdateOverview(){
-            $.getJSON('getoverview', function(data) {
-                for (var rowname in data) {
-                    document.getElementById(rowname).innerHTML=data[rowname];
-                }
-            });
-        }
-        function UpdateLogs(){
-            $.getJSON('getlogs', function(data) {
-                var html = "";
-                for (var i = 0; i < data.length; i+= 1) {
-                    html += '<tr><td>' + data[i]['when'] + '</td>';
-                    html += '<td>' + data[i]['level'] + '</td>';
-                    html += '<td>' + data[i]['name'] + '</td>';
-                    html += '<td>' + data[i]['message'] + '</td></tr>';
-                }
-                document.getElementById("logtable").innerHTML=html;
-            });
-        }
-        function UpdateAlarms(){
-            $.getJSON('getalarms', function(data) {
-                var html = "";
-                for (var i = 0; i < data.length; i+= 1) {
-                    html += '<tr><td>' + data[i]['when'] + '</td>';
-                    html += '<td>' + data[i]['name'] + '</td>';
-                    html += '<td>' + data[i]['message'] + '</td></tr>';
-                }
-                document.getElementById("alarmtable").innerHTML=html;
-            });
-        }
-        // This calls on a loop
-        function update(){
-            UpdateOverview();
-            UpdateLogs();
-            UpdateAlarms();
-            setTimeout(update, 10000); // 10 second loop
-        }
-        // start the loop when the page loads
-        window.onload = update();
+        window.setInterval(function() {
+                                    UpdateOverview();
+                                    UpdateLogs();
+                                    UpdateAlarms();
+                                },
+                            10000);
 
     </script>
 {% endblock %}
