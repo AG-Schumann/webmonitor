@@ -68,6 +68,10 @@ def get_reading_detail(request, sensor_name="", reading_name=""):
     for rm in ['default','testing','recovery']:
         selected = 'selected' if rm == reading['runmode'] else ''
         ret['html']['rd_runmode'] += f'<option value="{rm}" {selected}>{rm}</option>'
+    ret['html']['rd_status'] = ''
+    for status in ['offline','online']:
+        selected = 'selected' if status == reading['status'] else ''
+        ret['html']['rd_status'] += f'<option value="{status}" {selected}>{status}</option>'
 
     return JsonResponse(ret)
 

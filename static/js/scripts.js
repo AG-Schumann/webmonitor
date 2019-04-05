@@ -73,6 +73,7 @@ function GetReadingDetails(sensor_name, reading_name) {
         $("#rd_alarm_list").html("");
         $("#rd_cfg_list").html("");
         $("#rd_runmode").html("");
+        $("#rd_status").html("");
 
         $("#rd_name").val("");
         $("#rd_alrec").val("");

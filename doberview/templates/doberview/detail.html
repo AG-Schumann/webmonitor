@@ -12,7 +12,7 @@
 <form action="{% url 'startstop' name=sensordoc.name %}" method="post">
     {% csrf_token %}
     <fieldset>
-        <legend id="status_legend">Current status: {{ sensordoc.status }}</legend>
+        <legend id="status_legend">Current hardware status: {{ sensordoc.status }}</legend>
         {% if sensordoc.status == 'online' %}
             <input type="submit" id="startbtn" value="Stop">
         {% else %}
@@ -32,16 +32,17 @@
     </select><br>
     <fieldset>
         <legend id="rd_legend">No reading selected</legend>
-        Variable name: <input type="text" id="rd_name" name="name" disabled><br>
+        <input type="text" id="rd_name" name="name" disabled hidden><br>
+        Status: <select name="status" id="rd_status"></select><br>
         Runmode: <select name="runmode" id="rd_runmode"></select><br>
-        Alarm recurrence: <input type="number" min="1" max="99" step="1" id="rd_alrec" name="alarm_rec"><br>
+        Alarm recurrence: <input type="number" min="1" max="99" step="1" id="rd_alrec" name="recurrence"><br>
         Readout interval (seconds): <input type="number" min="5" max="300" step="1" id="rd_roi" name="readout_interval"><br>
         Alarms:
         <ul id="rd_alarm_list"></ul><br>
         Config:
         <ul id="rd_cfg_list"></ul>
-    <input type="submit" id="rdbtn" value="Submit">
-    <input type="reset">
+        <button type="submit" value="Submit" id="rdbtn">Submit</button>
+        <button type="reset" value="Reset">Reset</button>
     </fieldset>
 </form>
 
@@ -69,7 +70,8 @@
             No address info!
         {% endif %}
         <br>
-        <input type="submit" value="Submit"><input type="reset">
+        <button type="submit" value="Submit" >Submit</button>
+        <button type="reset" value="Reset">Reset</button>
     </fieldset>
 </form>
 
@@ -78,7 +80,7 @@
     <fieldset>
         <legend>Custom command</legend>
         <input type="text" name="command"><br>
-        <input type="submit" value="Submit">
+        <button type="submit" value="Submit">Submit</button>
     </fieldset>
 </form>
 
