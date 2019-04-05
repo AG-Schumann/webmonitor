@@ -83,11 +83,45 @@ function GetReadingDetails(sensor_name, reading_name) {
     $.getJSON('get_reading_detail/' + sensor_name + '/' + reading_name + '/', function(data) {
         if (data['html']) {
             for (var key in data['html']) {
-                $("#" + key).html(data['html'][key])
+                $("#" + key).html(data['html'][key]);
             }
             for (var key in data['value']) {
-                $("#" + key).val(data['value'][key])
+                $("#" + key).val(data['value'][key]);
             }
+        }
+    });
+}
+
+function LoadSensorDetails(sensor_name) {
+    // called in detail
+    console.log('Getting details for ' + sensor_name);
+    if (sensor_name.length == 0) {
+        $("#s_name_startstop").val("");
+        $("#status_legend").html("Current sensor status: unknown");
+        $("#startbtn").attr("disabled", true);
+        $("#rdbtn").attr("disabled", true);
+        $("#addrbtn").attr("disabled", true);
+        $("#subtitle").html('Sensor detail:');
+
+        $("#s_name_rd").val("");
+        $("#reading_dropdown").html('<option value="" selected>Select reading</option>');
+
+        $("#s_name_addr").val("");
+        $("#address_block").html("No address info!");
+        return;
+    }
+    $.getJSON('get_sensor_details/' + sensor_name + '/', function(data) {
+        if (data['html']) {
+            for (var key in data['html']) {
+                $("#" + key).html(data['html'][key]);
+            }
+            for (var key in data['value']) {
+                $("#" + key).val(data['value'][key]);
+            }
+            $("#startbtn").attr("disabled", false);
+            $("#rdbtn").attr("disabled", false);
+            $("#addrbtn").attr("disabled", false);
+            GetReadingDetails("none","");
         }
     });
 }

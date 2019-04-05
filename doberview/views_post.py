@@ -13,10 +13,11 @@ def client(meta):
             'client_user' : meta['REMOTE_USER'] if 'REMOTE_USER' in meta else 'web'}
 
 @require_POST
-def startstop(request, name=""):
+def startstop(request):
+    name = request.POST['sensor_name']
     if name not in base.db.Distinct('settings','sensors','name'):
         return HttpResponseNotModified()
-    status = base.db.GetSensorSettings(name)['status']
+    status = base.db.GetSensorSetting(name, 'status')
     user = client(request.META)
     if status == 'online':
         base.db.ParseCommand('stop %s' % name, user=user)
@@ -25,13 +26,14 @@ def startstop(request, name=""):
     return HttpResponseNotModified()
 
 @require_POST
-def change_address(request, name=""):
+def change_address(request):
+    new_vals = request.POST
+    name = new_vals['sensor_name']
     if name not in base.db.Distinct('settings','sensors','name'):
         return HttpResponseNotModified()
     old_vals = base.db.GetSensorSetting(name, 'address')
     if old_vals is None:
         return HttpResponseNotModified()
-    new_vals = request.POST
     user = client(request.META)
     if 'ip' in old_vals:
         if new_vals['ip'] != old_vals['ip']:
@@ -59,10 +61,11 @@ def log_command(request):
     return HttpResponseNotModified()
 
 @require_POST
-def change_reading(request, name=""):
+def change_reading(request):
+    new_vals = request.POST
+    name = new_vals['sensor_name']
     if name not in base.db.Distinct('settings','sensors','name'):
         return HttpResponseNotModified()
-    new_vals = request.POST
     reading_name = new_vals['reading_name']
     old_vals = base.db.GetReading(name, reading_name)
     if old_vals is None:

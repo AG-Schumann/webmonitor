@@ -17,26 +17,13 @@
         <!-- menu bar on top -->
         <div id="topmenu" class="navbar">
             <a href="{% url 'index' %}">Overview</a>
-            <div class="dropdown">
-                <button class="dropbtn">Sensor details
-                    <i class="fa fa-caret-down"></i>
-                </button>
-                <div class="dropdown-content">
-                    {% if sensors %}
-                        {% for name in sensors %}
-                            <a href="{% url 'detail' name=name %}">{{ name }}</a>
-                        {% endfor %}
-                    {% else %}
-                        <p>No sensors available</p>
-                    {% endif %}
-                </div>
-            </div>
+            <a href="{% url 'detail' %}">Sensor details</a>
             <a href="{% url 'trend' %}">Trend</a>
         </div>
 
         <header>
             <h1>Doberman Overview</h1>
-            <h2>{% block subtitle %}{% endblock %}</h2>
+            <h2 id="subtitle">{% block subtitle %}{% endblock %}</h2>
         </header>
 
         <!-- main section -->

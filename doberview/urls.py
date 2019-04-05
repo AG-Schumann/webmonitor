@@ -23,7 +23,7 @@ urlpatterns = [
              views_get.getlogs,
              name='getlogs'),
 
-        re_path(r'^detail/(?P<name>[^/]+)/(?:(?P<error_code>[^/]+)/)?$',
+        re_path(r'^detail/(?:(?P<error_code>[^/]+)/)?$',
                 views_render.detail,
                 name='detail'),
 
@@ -39,11 +39,11 @@ urlpatterns = [
              views_render.trend,
              name='trend'),
 
-        re_path(r'^startstop/(?P<name>[^/]+)/$',
+        re_path(r'^startstop/$',
                 views_post.startstop,
                 name='startstop'),
 
-        re_path(r'^change_address/(?P<name>[^/]+)/$',
+        re_path(r'^change_address/$',
                 views_post.change_address,
                 name='change_address'),
 
@@ -51,11 +51,15 @@ urlpatterns = [
                 views_post.log_command,
                 name='log_command'),
 
+        re_path(r'get_sensor_details/(?P<sensor_name>[^/]+)/$',
+                views_get.get_sensor_details,
+                name='get_sensor_details'),
+
         re_path(r'get_reading_detail/(?P<sensor_name>[^/]+)/(?P<reading_name>[^/]+)/$',
                 views_get.get_reading_detail,
                 name='get_reading_detail'),
 
-        re_path(r'^change_reading/(?P<name>[^/]+)/$',
+        re_path(r'^change_reading/$',
                 views_post.change_reading,
                 name='change_reading'),
 

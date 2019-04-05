@@ -45,6 +45,69 @@ def getlogs(request):
         return JsonResponse({'docs' : []})
 
 @require_GET
+def get_sensor_details(request, sensor_name=""):
+    print('Loading details for %s' % sensor_name)
+    ret = {'html' : {}, 'value' : {}}
+    if sensor_name not in base.db.Distinct('settings','sensors','name'):
+        return JsonResponse(ret)
+    sensor_doc = base.db.GetSensorSettings(sensor_name)
+    ret['value']['s_name_startstop'] = sensor_name
+    ret['value']['s_name_rd'] = sensor_name
+    ret['value']['s_name_addr'] = sensor_name
+    ret['html']['subtitle'] = "Sensor detail: " + sensor_name
+
+    ret['html']['reading_dropdown'] = '<option value="" selected>Select reading</option>'
+    for reading_name in sensor_doc['readings']:
+        ret['html']['reading_dropdown'] += f'<option value="{reading_name}">{reading_name}</option>'
+
+    if sensor_doc['status'] == 'online':
+        ret['value']['startbtn'] = 'Stop'
+        ret['html']['startbtn'] = 'Stop'
+        ret['html']['status_legend'] = 'Hardware connection online'
+    elif sensor_doc['status'] == 'offline':
+        ret['value']['startbtn'] = 'Start'
+        ret['html']['startbtn'] = 'Start'
+        ret['html']['status_legend'] = 'Hardware connection offline'
+    else:
+        ret['value']['startbtn'] = ''
+        ret['html']['startbtn'] = ''
+        ret['html']['status_legend'] = 'Hardware connection unknown'
+
+    if 'address' in sensor_doc:
+        s = ''
+        s += '<legend>Addressing</legend>'
+        if 'ip' in sensor_doc['address']:
+            print('IP stuff')
+            s += f'IP: <input type="text" name="ip" value="{sensor_doc["address"]["ip"]}"'
+            s += r' pattern="\\b(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\b">'
+            s += '<br>'
+            s += f'Port: <input type="number" name="port" value="{sensor_doc["address"]["port"]}" step="1">'
+            s += '<br>'
+        elif 'tty' in sensor_doc['address']:
+            print('Serial stuff')
+            s += f'SerialID: <input type="text" name="serialID" value="{sensor_doc["address"]["serialID"]}">'
+            s += '<br>'
+            s += f'Serial address: <input type="text" name="tty" value="{sensor_doc["address"]["tty"]}" '
+            s += r'pattern="\\b(?:(?:USB|S)[1-9]?[0-9])\\b">'
+            s += '<br>'
+            s += f'Baud: <select name="baud">'
+            for baud in [9600,19200,38400,57600]:
+                selected = 'selected' if sensor_doc['address']['baud'] == baud else ''
+                s += f'<option value="{baud}" {selected}>{baud}</option>'
+            s += '</select>'
+            s += '<br>'
+        if len(s) > 1:
+            s += '<button type="submit" value="Submit">Submit</button>'
+            s += '<button type="reset" value="Reset">Reset</button>'
+        else:
+            s += 'No address info!'
+        ret['html']['address_block'] = s
+    else:
+        ret['html']['address_block'] = 'No address info!'
+
+    return JsonResponse(ret)
+
+@require_GET
 def get_reading_detail(request, sensor_name="", reading_name=""):
     ret = {'html' : {}, 'value' : {}}
     if sensor_name not in base.db.Distinct('settings','sensors','name'):

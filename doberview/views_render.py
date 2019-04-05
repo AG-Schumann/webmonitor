@@ -2,10 +2,8 @@ from django.shortcuts import render
 
 from . import base
 
-def detail(request, name, error_code=None):
-    if name not in base.db.Distinct('settings','sensors','name'):
-        return index(request)
-    context = base.detail_context(name, error_code)
+def detail(request, error_code=None):
+    context = base.detail_context(error_code)
     return render(request, 'doberview/detail.html', context)
 
 def index(request):

@@ -1,7 +1,7 @@
 {% extends "doberview/base.html" %}
 <!-- detail.html -->
 
-{% block subtitle %}Sensor detail: {{ sensordoc.name }}{% endblock %}
+{% block subtitle %}Sensor detail{% endblock %}
 
 {% block content %}
 {% if error_msg %}
@@ -9,85 +9,77 @@
     <h3 style="color:#ee0000">{{ error_msg }}</h3>
 </div>
 {% endif %}
-<form action="{% url 'startstop' name=sensordoc.name %}" method="post">
-    {% csrf_token %}
-    <fieldset>
-        <legend id="status_legend">Current hardware status: {{ sensordoc.status }}</legend>
-        {% if sensordoc.status == 'online' %}
-            <input type="submit" id="startbtn" value="Stop">
-        {% else %}
-            <input type="submit" id="startbtn" value="Start">
-        {% endif %}
-    </fieldset>
-</form>
-<br>
 
-<form action="{% url 'change_reading' name=sensordoc.name %}" method="post">
-    {% csrf_token %}
-    <select name="reading_name" id="reading_dropdown">
-        <option value="" selected>Select reading</option>
-        {% for rd_name,desc in readings.items %}
-            <option value="{{ rd_name }}">{{ desc }}</option>
+<div class="div_detail">
+    Sensor:
+    <select id="sensor_select">
+        <option value="" selected>Select a sensor</option>
+        {% for sensor in sensors %}
+            <option value="{{ sensor }}">{{ sensor }}</option>
         {% endfor %}
-    </select><br>
-    <fieldset>
-        <legend id="rd_legend">No reading selected</legend>
-        <input type="text" id="rd_name" name="name" disabled hidden><br>
-        Status: <select name="status" id="rd_status"></select><br>
-        Runmode: <select name="runmode" id="rd_runmode"></select><br>
-        Alarm recurrence: <input type="number" min="1" max="99" step="1" id="rd_alrec" name="recurrence"><br>
-        Readout interval (seconds): <input type="number" min="5" max="300" step="1" id="rd_roi" name="readout_interval"><br>
-        Alarms:
-        <ul id="rd_alarm_list"></ul><br>
-        Config:
-        <ul id="rd_cfg_list"></ul>
-        <button type="submit" value="Submit" id="rdbtn">Submit</button>
-        <button type="reset" value="Reset">Reset</button>
-    </fieldset>
-</form>
+    </select>
 
-<form action="{% url 'change_address' name=sensordoc.name %}" method="post">
-    {% csrf_token %}
-    <fieldset>
-        <legend>Addressing</legend>
-        {% if sensordoc.address.ip %}
-            IP: <input type="text" name="ip" value="{{ sensordoc.address.ip }}"
-                pattern="\\b(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\b"><br>
-            Port: <input type="number" name="port" value="{{ sensordoc.address.port|stringformat:"d" }}" step="1"><br>
-        {% elif sensordoc.address.tty %}
-            SerialID: <input type="text" name="serialID" value="{{ sensordoc.address.serialID }}"><br>
-            Serial address: <input type="text" name="tty" pattern="\\b(?:(?:USB|S)[1-9]?[0-9])\\b" value="{{ sensordoc.address.tty }}"><br>
-            Baud: <select name="baud">
-                {% for baud in baudrates %}
-                    {% if sensordoc.address.baud == baud %}
-                        <option value="{{ baud }}" selected>{{ baud }}</option>
-                    {% else %}
-                        <option value="{{ baud }}">{{ baud }}</option>
-                    {% endif %}
-                {% endfor %}
-            </select>
-        {% else %}
-            No address info!
-        {% endif %}
-        <br>
-        <button type="submit" value="Submit" >Submit</button>
-        <button type="reset" value="Reset">Reset</button>
-    </fieldset>
-</form>
+<div class="div_startstop">
+    <form action="{% url 'startstop' %}" method="post">
+        {% csrf_token %}
+        <fieldset>
+            <legend id="status_legend">Hardware connection unknown</legend>
+            <input type="text" name="sensor_name" id="s_name_startstop" value="" disabled hidden>
+            <button type="submit" id="startbtn" disabled></button>
+        </fieldset>
+    </form>
+</div>
 
-<form action="{% url 'log_command' %}" method="post">
-    {% csrf_token %}
-    <fieldset>
-        <legend>Custom command</legend>
-        <input type="text" name="command"><br>
-        <button type="submit" value="Submit">Submit</button>
-    </fieldset>
-</form>
+<div class="div_reading">
+    <form action="{% url 'change_reading' %}" method="post">
+        {% csrf_token %}
+        <input type="text" id="s_name_rd" name="sensor_name" value="" disabled hidden>
+        <select name="reading_name" id="reading_dropdown">
+            <option value="" selected>Select reading</option>
+        </select><br>
+        <fieldset>
+            <legend id="rd_legend">No reading selected</legend>
+            <input type="text" id="rd_name" name="reading_name" disabled hidden><br>
+            Status: <select name="status" id="rd_status"></select><br>
+            Runmode: <select name="runmode" id="rd_runmode"></select><br>
+            Alarm recurrence: <input type="number" min="1" max="99" step="1" id="rd_alrec" name="recurrence"><br>
+            Readout interval (seconds): <input type="number" min="5" max="300" step="1" id="rd_roi" name="readout_interval"><br>
+            Alarms:
+            <ul id="rd_alarm_list"></ul><br>
+            Config:
+            <ul id="rd_cfg_list"></ul>
+            <button type="submit" value="Submit" id="rdbtn" disabled>Submit</button>
+            <button type="reset" value="Reset">Reset</button>
+        </fieldset>
+    </form>
+</div>
 
+<div class="div_address">
+    <form action="{% url 'change_address' %}" method="post">
+        {% csrf_token %}
+        <input type="text" id="s_name_addr" disabled hidden>
+        <fieldset id="address_block">
+        </fieldset>
+    </form>
+</div>
+
+<div class="div_command">
+    <form action="{% url 'log_command' %}" method="post">
+        {% csrf_token %}
+        <fieldset>
+            <legend>Custom command</legend>
+            <input type="text" name="command"><br>
+            <button type="submit" value="Submit">Submit</button>
+        </fieldset>
+    </form>
+</div>
+
+</div>
 {% endblock %}
 
 {% block javascript %}
     <script>
-        $('#reading_dropdown').change(function() {GetReadingDetails("{{ sensordoc.name }}", $(this).val())});
+        $("#sensor_select").change(function() {LoadSensorDetails($(this).val())});
+        $('#reading_dropdown').change(function() {GetReadingDetails($("#s_name_rd").val(), $(this).val())});
     </script>
 {% endblock %}
