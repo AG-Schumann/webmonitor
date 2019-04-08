@@ -7,7 +7,7 @@
         <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-        <script src="{% static 'js/scripts.js' %}"></script>
+        <script src="{% static 'js/scripts_sc.js' %}"></script>
         <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
     </head>
@@ -19,6 +19,7 @@
             <a href="{% url 'index' %}">Overview</a>
             <a href="{% url 'detail' %}">Sensor details</a>
             <a href="{% url 'trend' %}">Trend</a>
+            <a href="/control/">DAQ</a>
         </div>
 
         <header>

@@ -102,7 +102,6 @@ function LoadSensorDetails(sensor_name) {
         $("#rdbtn").attr("disabled", true);
         $("#addrbtn").attr("disabled", true);
         $("#subtitle").html('Sensor detail:');
-
         $("#s_name_rd").val("");
         $("#reading_dropdown").html('<option value="" selected>Select reading</option>');
 
@@ -117,6 +116,7 @@ function LoadSensorDetails(sensor_name) {
             }
             for (var key in data['value']) {
                 $("#" + key).val(data['value'][key]);
+                console.log(key + ' ' + data['value'][key]);
             }
             $("#startbtn").attr("disabled", false);
             $("#rdbtn").attr("disabled", false);

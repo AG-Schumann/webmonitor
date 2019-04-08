@@ -24,7 +24,7 @@
         {% csrf_token %}
         <fieldset>
             <legend id="status_legend">Hardware connection unknown</legend>
-            <input type="text" name="sensor_name" id="s_name_startstop" value="" disabled hidden>
+            <input type="text" name="sensor_name" id="s_name_startstop" hidden>
             <button type="submit" id="startbtn" disabled></button>
         </fieldset>
     </form>
@@ -33,13 +33,13 @@
 <div class="div_reading">
     <form action="{% url 'change_reading' %}" method="post">
         {% csrf_token %}
-        <input type="text" id="s_name_rd" name="sensor_name" value="" disabled hidden>
+        <input type="text" id="s_name_rd" name="sensor_name" hidden>
         <select name="reading_name" id="reading_dropdown">
             <option value="" selected>Select reading</option>
         </select><br>
         <fieldset>
             <legend id="rd_legend">No reading selected</legend>
-            <input type="text" id="rd_name" name="reading_name" disabled hidden><br>
+            <input type="text" id="rd_name" name="reading_name" hidden><br>
             Status: <select name="status" id="rd_status"></select><br>
             Runmode: <select name="runmode" id="rd_runmode"></select><br>
             Alarm recurrence: <input type="number" min="1" max="99" step="1" id="rd_alrec" name="recurrence"><br>
@@ -57,7 +57,7 @@
 <div class="div_address">
     <form action="{% url 'change_address' %}" method="post">
         {% csrf_token %}
-        <input type="text" id="s_name_addr" disabled hidden>
+        <input type="text" id="s_name_addr" hidden>
         <fieldset id="address_block">
         </fieldset>
     </form>

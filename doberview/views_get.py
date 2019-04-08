@@ -46,7 +46,6 @@ def getlogs(request):
 
 @require_GET
 def get_sensor_details(request, sensor_name=""):
-    print('Loading details for %s' % sensor_name)
     ret = {'html' : {}, 'value' : {}}
     if sensor_name not in base.db.Distinct('settings','sensors','name'):
         return JsonResponse(ret)
@@ -77,14 +76,12 @@ def get_sensor_details(request, sensor_name=""):
         s = ''
         s += '<legend>Addressing</legend>'
         if 'ip' in sensor_doc['address']:
-            print('IP stuff')
             s += f'IP: <input type="text" name="ip" value="{sensor_doc["address"]["ip"]}"'
             s += r' pattern="\\b(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\b">'
             s += '<br>'
             s += f'Port: <input type="number" name="port" value="{sensor_doc["address"]["port"]}" step="1">'
             s += '<br>'
         elif 'tty' in sensor_doc['address']:
-            print('Serial stuff')
             s += f'SerialID: <input type="text" name="serialID" value="{sensor_doc["address"]["serialID"]}">'
             s += '<br>'
             s += f'Serial address: <input type="text" name="tty" value="{sensor_doc["address"]["tty"]}" '
@@ -265,7 +262,5 @@ def getoverview(request):
                 else:
                     tabs[key] += '<td colspan="3" style="color:#FF7F00">Offline</td>'
                 tabs[key] += '</tr><tr>'
-            #if 'Test' in key:
-            #    print(tabs[key])
             tabs[key] = tabs[key][:-4]
     return JsonResponse(tabs)
