@@ -1,59 +1,41 @@
-{% load staticfiles %}
-<style>
-table, th, td {
-    border: 1px solid black;
-    border-collapse: collapse;
-}
-</style>
+{% load static %}
 
 <html>
     <head>
         <title>Doberview</title>
-<!--
-        <link rel="stylesheet" href="{% static 'css/styles.css' %}">
--->
         <meta charset='utf-8'>
-        <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
-        <!--    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> -->
-        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-        {% block LoadPlots %}{% endblock %}
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+        <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+        <script src="{% static 'js/scripts_sc.js' %}"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
     </head>
-    <div id="headerBar"></div>
 
     <body>
-        <!-- header -->
-        <header>
-            <h1>Doberview!</h1>
-            <h2>{% block subtitle %}{% endblock %}</h2>
-        </header>
 
-        <!-- menu bar on left -->
-        <div id="cssmenu">
-            <ul>
-                <li><a href="{% url 'index' %}"><span>Home</span></a></li>
-                <li><span>Controllers</span></li>
-                    <ul>
-                        {% for name in controller_list %}
-                            <li class='last'><a href="{% url 'index' %}detail/{{ name }}/"><span>{{ name }}</span></a></li>
-                        {% empty %}
-                            <p>No controllers available!</p>
-                        {% endfor %}
-                    </ul>
-                    <!-- <li><a href="{% url 'index' %}monitor/"><span>Plotter</span></a></li> -->
-            </ul>
-            {% block sidebar %}
-            {% endblock %}
+        <!-- menu bar on top -->
+        <div id="topmenu" class="navbar">
+            <a href="{% url 'index' %}">Overview</a>
+            <a href="{% url 'detail' %}">Sensor details</a>
+            <a href="{% url 'trend' %}">Trend</a>
+            <a href="/control/">DAQ</a>
         </div>
+
+        <header>
+            <h1>Doberman Overview</h1>
+            <h2 id="subtitle">{% block subtitle %}{% endblock %}</h2>
+        </header>
 
         <!-- main section -->
         <section>
             {% block content %}
             {% endblock %}
         </section>
-    </body>
 
     {% block javascript %}
     {% endblock %}
+
+    </body>
 
 </html>

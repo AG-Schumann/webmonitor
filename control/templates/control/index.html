@@ -1,0 +1,94 @@
+{% extends "control/base.html" %}
+<!-- index.html -->
+
+{% block subtitle %} DAQ control {% endblock %}
+
+{% block content %}
+    <div style="background-color:#eeeeee;padding:5px:border-radius:5px">
+        <h2 style="background-color:#dddddd;padding:2px;border-radius:3px">Current status</h2>
+        <p id="statusnow">Unknown</p>
+        <p>{{ message }}</p>
+        <table style="width:100%">
+            <tr>
+                <td>
+                    <form action="{% url 'start' %}" method="post">
+                        {% csrf_token %}
+                        <input type="range" min="1" max="10" value="3" id="durationslide" name="duration">
+                        <label for="durationslide" id="durationlabel">Duration</label>
+                        <input type="submit" value="Start" id="startbutton">
+                    </form>
+                </td>
+                <td>
+                    <form action="{% url 'stop' %}" method="post">
+                        {% csrf_token %}
+                    <input type="submit" value="Stop" id="stopbutton">
+                    </form>
+                </td>
+                <td>
+                    <form action="{% url 'arm' %}" method="post">
+                        {% csrf_token %}
+                        <select name="mode">
+                        {% for mode in modes %}
+                            <option value="{{ mode }}">{{ mode }}</option>
+                        {% endfor %}
+                        </select>
+                    <input type="submit" value="Arm" id="armbutton">
+                    </form>
+                </td>
+                <td>
+                    <form action="{% url 'disarm' %}" method="post">
+                        {% csrf_token %}
+                    <input type="submit" value="Disarm" id="disarmbutton">
+                    </form>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <br>
+
+    <div style="background-color:#eeeeee;padding:5px:border-radius:5px">
+        <h2 style="background-color:#dddddd;padding:2px;border-radius:3px">Status history</h2>
+        <table style="width:100%">
+            <tr>
+                <th>Time</th>
+                <th>Rate (MB/s)</th>
+                <th>Pulse frequency</th>
+            </tr>
+            <tbody id="historytable"></tbody>
+        </table>
+    </div>
+
+    <br>
+
+    <div style="background-color:#eeeeee;padding:5px:border-radius:5px">
+        <h2 style="background-color:#dddddd;padding:2px;border-radius:3px">Recent runs</h2>
+        <table style="width:100%">
+            <tr>
+                <th>Number</th>
+                <th>Name</th>
+                <th>Mode</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Duration (s)</th>
+            </tr>
+            <tbody id="runstable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        var slider = document.getElementById('durationslide');
+        var label = document.getElementById('durationlabel');
+        label.innerHTML = slider.value + " min";
+        slider.oninput = function() {
+            label.innerHTML = this.value + " min";
+        }
+        window.onload = function() {
+            UpdateRuns();
+            UpdateStatusHistory();
+        }
+        window.setInterval(UpdateRuns, 30000);
+        window.setInterval(UpdateStatus, 1000);
+        window.setInterval(UpdateStatusHistory, 5000);
+    </script>
+{% endblock %}

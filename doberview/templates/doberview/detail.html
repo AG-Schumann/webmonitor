@@ -1,112 +1,85 @@
 {% extends "doberview/base.html" %}
 <!-- detail.html -->
 
-{% block LoadPlots %}
-    <script type="text/javascript">
-        google.charts.load('current', {packages: ['corechart']});
-        google.charts.setOnLoadCallback(drawChart);
-    </script>
-{% endblock %}
-
-{% block subtitle %}Controller detail: {{ detaildoc.name }}{% endblock %}
-
-{% block sidebar %}
-    <div>
-        <ul>
-        <form>
-            <li><div>Select Data:
-                <select width="15px" id="dropdown_data" name="dropdown_data">
-                    {% for desc in detaildoc.description %}
-                        <option value="{{ forloop.counter  }}">{{ forloop.counter}}: {{ desc }}</option>
-                    {% empty %}
-                        <p>No data!</p>
-                    {% endfor %}
-                </select>
-            </div></li>
-
-            <li><div>Select time range: (1)
-                <form><input type="range" name="time_num" step="1" value="5" min="1" max="10"></form> (10)
-                <select id="dropdown_time" name="dropdown_time">
-                    <option value="hr">hour(s)</option>
-                    <option value="day">day(s)</option>
-                    <option value="wk">week(s)</option>
-                    <option value="mo">month(s)</option>
-                </select>
-            </div></li>
-            <input type="submit" value="Plot">
-        </form>
-        </ul>
-    </div>
-{% endblock %}
+{% block subtitle %}Sensor detail{% endblock %}
 
 {% block content %}
-    <div id="controller_name">{{ detaildoc.name }}</div>
-    <div style="background-color:#eeeeee;padding:5px;border-radius:5px">
-        <h2 style="background-color:#dddddd;padding:2px;border-radius:2px">Controller overview</h2>
-        <table style="width:100%">
-            <tr><th colspan="7">Alarms/Warnings</th></tr>
-            <tr>
-                <th>Description</th>
-                <th>Runmode</th>
-                <th>Alarm low</th>
-                <th>Warning low</th>
-                <th>Status</th>
-                <th>Warning high</th>
-                <th>Alarm high</th>
-            </tr>
-            <tbody id="reading_table"></tbody>
-        </table>
-    </div>
-    <br>
+{% if error_msg %}
+<div>
+    <h3 style="color:#ee0000">{{ error_msg }}</h3>
+</div>
+{% endif %}
 
-    <div id="chart_div" style="display:inline-block; width:85%; height:48%;"></div>
+<div class="div_detail">
+    Sensor:
+    <select id="sensor_select">
+        <option value="" selected>Select a sensor</option>
+        {% for sensor in sensors %}
+            <option value="{{ sensor }}">{{ sensor }}</option>
+        {% endfor %}
+    </select>
 
+<div class="div_startstop">
+    <form action="{% url 'startstop' %}" method="post">
+        {% csrf_token %}
+        <fieldset>
+            <legend id="status_legend">Hardware connection unknown</legend>
+            <input type="text" name="sensor_name" id="s_name_startstop" hidden>
+            <button type="submit" id="startbtn" disabled></button>
+        </fieldset>
+    </form>
+</div>
+
+<div class="div_reading">
+    <form action="{% url 'change_reading' %}" method="post">
+        {% csrf_token %}
+        <input type="text" id="s_name_rd" name="sensor_name" hidden>
+        <select name="reading_name" id="reading_dropdown">
+            <option value="" selected>Select reading</option>
+        </select><br>
+        <fieldset>
+            <legend id="rd_legend">No reading selected</legend>
+            <input type="text" id="rd_name" name="reading_name" hidden><br>
+            Status: <select name="status" id="rd_status"></select><br>
+            Runmode: <select name="runmode" id="rd_runmode"></select><br>
+            Alarm recurrence: <input type="number" min="1" max="99" step="1" id="rd_alrec" name="recurrence"><br>
+            Readout interval (seconds): <input type="number" min="5" max="300" step="1" id="rd_roi" name="readout_interval"><br>
+            Alarms:
+            <ul id="rd_alarm_list"></ul><br>
+            Config:
+            <ul id="rd_cfg_list"></ul>
+            <button type="submit" value="Submit" id="rdbtn" disabled>Submit</button>
+            <button type="reset" value="Reset">Reset</button>
+        </fieldset>
+    </form>
+</div>
+
+<div class="div_address">
+    <form action="{% url 'change_address' %}" method="post">
+        {% csrf_token %}
+        <input type="text" id="s_name_addr" hidden>
+        <fieldset id="address_block">
+        </fieldset>
+    </form>
+</div>
+
+<div class="div_command">
+    <form action="{% url 'log_command' %}" method="post">
+        {% csrf_token %}
+        <fieldset>
+            <legend>Custom command</legend>
+            <input type="text" name="command"><br>
+            <button type="submit" value="Submit">Submit</button>
+        </fieldset>
+    </form>
+</div>
+
+</div>
 {% endblock %}
 
 {% block javascript %}
-    <script type="text/javascript">
-        function drawTable(){
-            var name = document.getElementById('controller_name').innerHTML;
-            $.getJSON('gettable/', function(data) {
-                document.getElementById('reading_table').innerHTML=data['table_content'];
-            });
-        }
-
-        function drawChart(){
-            var data_index = document.getElementById('dropdown_data');
-            var howmany = document.getElementById('time_num');
-            var which = document.getElementById('dropdown_time');
-            var name = document.getElementById('controller_name');
-            var url = 'getdata/' + name + '/' + data_index + '/';
-            url += howmany + which;
-            var points = new google.visualization.DataTable();
-            points.addColumn('datetime', 'Time');
-            points.addColumn('number', 'Values');
-            points.addColumn('number', 'Low warning');
-            points.addColumn('number', 'Low alarm');
-            points.addColumn('number', 'High warning');
-            points.addColumn('number', 'High alarm');
-            var options = {};
-            $.getJSON(url, function(data) {
-                var numpts = data['x'].length
-                var warn_low = data['levels']['warn_low'];
-                var alarm_low = data['levels']['alarm_low'];
-                var warn_high = data['levels']['warn_high'];
-                var alarm_high = data['levels']['alarm_high'];
-                for (var i = 0; i < numpts; i+=1) {
-                    points.addRow([new Date(data['x'][i]), data['y'][i], warn_low, alarm_low, warn_high, alarm_high]);
-                }
-                options['title'] = data['desc'];
-            });
-            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-            chart.draw(data,options);
-        }
-        function stuff(){
-            drawTable();
-            drawChart();
-        }
-        // start the loop when the page loads
-        window.onload = stuff();
-
+    <script>
+        $("#sensor_select").change(function() {LoadSensorDetails($(this).val())});
+        $('#reading_dropdown').change(function() {GetReadingDetails($("#s_name_rd").val(), $(this).val())});
     </script>
 {% endblock %}
