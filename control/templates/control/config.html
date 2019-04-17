@@ -6,37 +6,14 @@
 {% block content %}
     <div style="background-color:#eeeeee;padding:5px;border-radius:5px">
         <h2> Config doc configinator 9000 </h2>
-        <form action="{% url 'getconfigdoc' %}" method='get'>
+        Select a config: <select name="mode">
+        {% for mode in modes %}
+            <option value="{{ mode }}">{{ mode }}</option>
+        {% endfor %}
+        </select>
+        <button type="button" onclick="LoadConfigDoc()">Load</button>
+        <form>
             {% csrf_token %}
-            <select name="mode">
-            {% for mode in modes %}
-                <option value="{{ mode }}">{{ mode }}</option>
-            {% endfor %}
-            </select>
-            <input type="submit" value="Get doc" id="submitbutton">
-        </form>
-        {% if modedoc %}
-            <form action="{% url 'updatemodedoc' %}" method="post" autocomplete="off">
-                {% csrf_token %}
-                {% for key, value in modedoc.block1.items %}
-                    {{ key }}:
-                    <input type="{{ value.type }}" name="{{ key }}" value="{{ value.val }}"><br>
-                {% endfor %}
-                <br><br><br>
-                Registers:
-                {% for gw in modedoc.registers %}
-                    Value: <input type="text" pattern="[A-Za-z0-9]+" name="value" value="{{ gw.value }}"><br>
-                    Register: <input type="text" pattern="[A-Za-z0-9]+" name="register" value="{{ gw.register }}"><br>
-                    Comment: <input type="text" name="comment" value="{{ gw.comment }}"><br>
-                    <br>
-                {% endfor %}
-                Value: <input type="text" pattern="[A-Za-z0-9]" name="value" placeholder="value"><br>
-                Register: <input type="text" pattern="[A-Za-z0-9]" name="register" placeholder="register"><br>
-                Comment: <input type="text" name="comment" placeholder="comment"><br>
-                <br>
-                <input type="submit" value="New" id="new_mode_button" formaction="{% url 'newmodedoc' %}">
-                <input type="submit" value="Update" id="update_mode_button">
-            </form>
-        {% else %}
-            <p> No doc loaded </p>
-        {% endif %}
+            Name: <input type="text" placeholder="name" id="name_field">
+            Include: <input type="text" placeholder="pmt_config, default_registers_tpc", id="include_field">
+

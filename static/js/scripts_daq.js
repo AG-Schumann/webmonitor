@@ -1,38 +1,38 @@
 // scripts go here
 function UpdateStatus(){
     $.getJSON('get_status', function(data) {
-        //console.log(data);
-        var ret = {'status' : '',
-            'buttons' : []
-        };
+        var stat = "";
+        var buttons = [];
         if (data['status'] === 'offline') {
-            ret.status = "Offline";
-            ret.buttons = [true, true, true, true];
+            stat = "Offline";
+            buttons = [true, true, true, true];
         } else if (data['status'] === 'idle') {
-            ret.status = "Idle";
-            ret.buttons = [true,true,false,true];
+            stat = "Idle";
+            buttons = [true, true, false, false];
         } else if (data['status'] === 'arming') {
-            ret.status = "Arming for " + data['mode'];
-            ret.buttons = [true,true,true,true];
+            stat = "Arming for " + data['mode'];
+            buttons = [true, true, true, true];
         } else if (data['status'] === 'armed') {
-            ret.status = "Armed for " + data['mode'];
-            ret.buttons = [false,true,true,false];
+            stat = "Armed for " + data['mode'];
+            buttons = [false, true, true, true];
         } else if (data['status'] === 'running') {
-            ret.status = "Run " + data['name'] + " is live";
-            ret.buttons = [true,false,true,true];
-        } else if (data['status'] === 'straxinating') {
-            ret.status = "Straxinating " + data['name'];
-            ret.buttons = [true,true,true,true];
+            stat = "Run " + data['name'] + " is live";
+            buttons = [true, false, true, true];
+        } else if (data['status'] === 'error') {
+            stat = "Error";
+            buttons = [true, false, true, true];
+        } else {
+            stat = "Unknown";
+            buttons = [true, true, true, true];
         }
-        //console.log(ret);
-        $("#statusnow").html(ret.status);
-        $("#startbutton").attr("disabled",ret.buttons[0]);
-        $("#stopbutton").attr("disabled",ret.buttons[1]);
-        $("#armbutton").attr("disabled",ret.buttons[2]);
-        $("#disarmbutton").attr("disabled",ret.buttons[3]);
-        //return ret;
+        $("#statusnow").html(stat);
+        $("#startbutton").attr("disabled", buttons[0]);
+        $("#stopbutton").attr("disabled", buttons[1]);
+        $("#armbutton").attr("disabled", buttons[2]);
+        $("#ledbutton").attr("disabled", buttons[3]);
     });
 }
+
 function UpdateStatusHistory(){
     $.getJSON('get_status_history', function(data) {
         var html = "";
@@ -46,11 +46,10 @@ function UpdateStatusHistory(){
             html += "<td>" + f[i] + "</td>";
             html += "</tr>";
         }
-        //console.log('History');
-        //console.log(html);
         $("#historytable").html(html);
     });
 }
+
 function UpdateRuns(){
     $.getJSON('get_runs', function(data) {
         var html = "";
@@ -65,11 +64,7 @@ function UpdateRuns(){
             html += "<td>" + d[i]['duration'] + '</td>';
             html += '</tr>';
         }
-        //console.log('Runs');
-        //console.log(html);
         $("#runstable").html(html);
-        //return html;
-        //document.getElementById(runstable).innerHTML=html;
     });
 }
 

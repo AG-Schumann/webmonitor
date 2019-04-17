@@ -1,5 +1,5 @@
 <!-- base.html -->
-{% load static staticfiles %}
+{% load static %}
 
 <style>
 table, th, td {
@@ -11,13 +11,18 @@ table, th, td {
     <head>
         <title>XeBRA DAQ</title>
         <meta charset="utf-8">
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-        <script src="{% static "control/scripts.js" %}"></script>
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+        <script src="{% static 'js/scripts_daq.js' %}"></script>
 
     </head>
-    <div id="headerbar"></div>
 
     <body>
+        <div id="headerbar">
+            <a href="{% url 'index' %}">Index</a>
+            <a href="{% url 'config' %}">Configurator</a>
+            <a href="/doberview/">Slow control</a>
+        </div>
         <header>
             <h1>XeBRA</h1>
             <h2>{% block subtitle %}{% endblock %}</h2>

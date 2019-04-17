@@ -7,21 +7,24 @@
     <div style="background-color:#eeeeee;padding:5px:border-radius:5px">
         <h2 style="background-color:#dddddd;padding:2px;border-radius:3px">Current status</h2>
         <p id="statusnow">Unknown</p>
-        <p>{{ message }}</p>
+        {% if message %}
+            <p>{{ message }}</p>
+        {% endif %}
         <table style="width:100%">
             <tr>
                 <td>
                     <form action="{% url 'start' %}" method="post">
                         {% csrf_token %}
-                        <input type="range" min="1" max="10" value="3" id="durationslide" name="duration">
+                        <input type="range" min="1" max="15" value="3" id="durationslide" name="duration">
                         <label for="durationslide" id="durationlabel">Duration</label>
+                        <input type="text" name="comment" placeholder="Run comment">
                         <input type="submit" value="Start" id="startbutton">
                     </form>
                 </td>
                 <td>
                     <form action="{% url 'stop' %}" method="post">
                         {% csrf_token %}
-                    <input type="submit" value="Stop" id="stopbutton">
+                        <input type="submit" value="Stop" id="stopbutton">
                     </form>
                 </td>
                 <td>
@@ -32,21 +35,28 @@
                             <option value="{{ mode }}">{{ mode }}</option>
                         {% endfor %}
                         </select>
-                    <input type="submit" value="Arm" id="armbutton">
+                        Config override:
+                        <textarea name="config_override" rows="10" cols="32"
+                            placeholder="{\"some_field\" : some_value}">
+                        </textarea>
+                        Custom registers:
+                        <textarea name="registers" rows="10" cols="32"
+                            placeholder="0xADDR 0xVAL">
+                        </textarea>
+                        <input type="submit" value="Arm" id="armbutton">
+                        <input type="reset" value="Reset">
                     </form>
                 </td>
                 <td>
-                    <form action="{% url 'disarm' %}" method="post">
+                    <form action="{% url 'led' %}" method="post">
                         {% csrf_token %}
-                    <input type="submit" value="Disarm" id="disarmbutton">
+                        <input type="submit" value="Do LED calibration" id="ledbutton">
                     </form>
                 </td>
             </tr>
         </table>
     </div>
-
     <br>
-
     <div style="background-color:#eeeeee;padding:5px:border-radius:5px">
         <h2 style="background-color:#dddddd;padding:2px;border-radius:3px">Status history</h2>
         <table style="width:100%">

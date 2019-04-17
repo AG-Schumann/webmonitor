@@ -5,6 +5,11 @@ import time
 import datetime
 import os
 
+def client(meta):
+    return {'client_addr' : meta['REMOTE_ADDR'],
+            'client_name' : meta['REMOTE_HOST'],
+            'client_user' : meta['REMOTE_USER'] if 'REMOTE_USER' in meta else 'web'}
+
 def getNextRunNumber():
     client = MongoClient(os.environ['MONITOR_URI'])
     coll = client['runs']['xebra']
@@ -77,60 +82,6 @@ def get_status_history(request, limit=5):
     client.close()
     return JsonResponse(ret)
 
-def start(request):
-    client = MongoClient(os.environ['MONITOR_URI'])
-    if getCurrentStatus() != 'armed':
-        return HttpResponseRedirect('/status',content={'message' : 'DAQ isn\'t armed, can\'t start'})
-    run_number = getNextRunNumber()
-    start_time = datetime.datetime.now()
-    run_name = start_time.strftime('%Y%m%d_%H%M')
-    statusdoc = client['kodiaq']['status'].find_one()
-    mode = statusdoc['mode']
-    try:
-        duration = int(request.POST['duration'])*60
-    except KeyError:
-        duration = 180
-    start_doc = {
-            "command" : "start",
-            "name" : run_name,
-            "number" : run_number,
-            "logged" : time.time()
-    }
-    client['kodiaq']['commands'].insert_one(start_doc)
-    rundoc = {
-            "name" : run_name,
-            "number" : run_number,
-            "start" : start_time,
-            "mode" : mode,
-            "ini" : client['kodiaq']['config'].find_one({'mode' : mode}),
-            "user" : "web",
-            "tc" : 1
-    }
-    client['runs']['xebra'].insert_one(rundoc)
-    stop_doc = {
-            "command" : "stop",
-            "logged" : time.time() + duration
-    }
-    client['kodiaq']['commands'].insert_one(stop_doc)
-    client.close()
-    return HttpResponseRedirect('/control')
-
-def stop(request):
-    client = MongoClient(os.environ['MONITOR_URI'])
-    if getCurrentStatus() != 'running':
-        return HttpResponseRedirect('/status',content={'message' : 'DAQ isn\'t running, can\'t stop'})
-    to_delete = {
-            "command" : "stop",
-            "logged" : {"$gte" : time.time()}
-    }
-    client['kodiaq']['commands'].delete_many(to_delete)
-    stop_doc = {
-            "command" : "stop",
-            "logged" : time.time()
-    }
-    client['kodiaq']['commands'].insert_one(stop_doc)
-    client.close()
-    return HttpResponseRedirect('/control')
 
 def arm(request):
     client = MongoClient(os.environ['MONITOR_URI'])

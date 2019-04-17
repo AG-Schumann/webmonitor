@@ -11,7 +11,7 @@ urlpatterns = [
         path('disarm', views.disarm, name='disarm'),
         path('get_status', views.get_status, name='get_status'),
         path('get_runs', views.get_runs, name='get_runs'),
-        re_path('^get_status_history/(?P<limit>[1-9][0-9]*)?$', views.get_status_history, name='get_status_history'),
+        path('get_status_history', views.get_status_history, name='get_status_history'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
