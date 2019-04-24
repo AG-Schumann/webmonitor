@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_pam',
     'doberview',
     'control',
 ]
@@ -53,6 +54,11 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'webmonitor.urls'
+
+AUTHENTICATION_BACKENDS = [
+    'django_pam.auth.backends.PAMBackend',
+    #'django.contrib.auth.backends.ModelBackend',
+]
 
 TEMPLATES = [
     {
@@ -77,6 +83,10 @@ WSGI_APPLICATION = 'webmonitor.wsgi.application'
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {
+        'default' : {
+            'ENGINE' : 'django.db.backends.sqlite3',
+            'NAME' : 'thisisatest',
+            }
 }
 
 

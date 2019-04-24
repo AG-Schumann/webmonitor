@@ -123,7 +123,7 @@ def get_reading_detail(request, sensor_name="", reading_name=""):
         ret['html']['rd_alarm_list'] += f'<li>Level {i}: Low:<input type="number" name="al_{i}_0" value="{lo}" step="any"> High:<input type="number" name="al_{i}_1" value="{hi}" step="any"></li>'
     ret['html']['rd_cfg_list'] = ''
     for rm,cfg in reading['config'].items():
-        ret['html']['rd_cfg_list'] += f'<li>{rm}: <input type="number" min="-1" step=1 max="{len(reading["alarms"])-1}" value="{cfg["level"]}" name="{rm}_level"></li>'
+        ret['html']['rd_cfg_list'] += f'<li>{rm}: <input type="number" min="-1" step=1 max="{len(reading["alarms"])-1}" value="{int(cfg["level"])}" name="{rm}_level"></li>'
     ret['html']['rd_runmode'] = ''
     for rm in ['default','testing','recovery']:
         selected = 'selected' if rm == reading['runmode'] else ''

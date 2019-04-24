@@ -1,4 +1,5 @@
 {% load static %}
+{% load staticfiles %}
 
 <html>
     <head>
@@ -20,6 +21,8 @@
             <a href="{% url 'detail' %}">Sensor details</a>
             <a href="{% url 'trend' %}">Trend</a>
             <a href="/control/">DAQ</a>
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'logout' %}?next={{ next }}">Logout</a>
         </div>
 
         <header>

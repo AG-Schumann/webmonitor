@@ -1,5 +1,6 @@
 from django.http import JsonResponse, HttpResponseNotModified
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 
 import datetime
@@ -12,6 +13,7 @@ def client(meta):
             'client_name' : meta['REMOTE_HOST'],
             'client_user' : meta['REMOTE_USER'] if 'REMOTE_USER' in meta else 'web'}
 
+@login_required
 @require_POST
 def startstop(request):
     name = request.POST['sensor_name']
@@ -25,6 +27,7 @@ def startstop(request):
         base.db.ProcessCommandStepOne('start %s' % name, user=user)
     return HttpResponseNotModified()
 
+@login_required
 @require_POST
 def change_address(request):
     new_vals = request.POST
@@ -69,12 +72,14 @@ def change_address(request):
                               **user)
     return HttpResponseNotModified()
 
+@login_required
 @require_POST
 def log_command(request):
     user = client(request.META)
     base.db.ProcessCommandStepOne(request.POST['command'], user=user)
     return HttpResponseNotModified()
 
+@login_required
 @require_POST
 def change_reading(request):
     new_vals = request.POST

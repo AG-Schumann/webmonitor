@@ -1,0 +1,9 @@
+{% extends 'doberview/base.html' %}
+{% load staticfiles %}
+{% block script %}
+    {{ form.media }}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+{% endblock %}
+{% block content %}
+    {% include "django_pam/accounts/_login.html" %}
+{% endblock %}

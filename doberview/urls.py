@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import path, re_path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -62,5 +62,13 @@ urlpatterns = [
         re_path(r'^change_reading/$',
                 views_post.change_reading,
                 name='change_reading'),
+
+        re_path(r'^django-pam/', include('django_pam.urls')),
+        re_path(r'^login/$',
+                views_render.login,
+                name='login'),
+        re_path(r'^logout/(?P<next>[\w\-\:/]+)?$',
+                views_render.logout,
+                name='logout'),
 
         ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
