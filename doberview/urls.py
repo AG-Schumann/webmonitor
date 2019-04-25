@@ -67,11 +67,11 @@ urlpatterns = [
                 views_render.contacts,
                 name='contacts'),
 
-        re_path(r'^change_contact_status/$',
+        re_path(r'change_contact_status/$',
                 views_post.change_contact_status,
                 name='change_contact_status'),
 
-        re_path(r'^new_contact/$',
+        re_path(r'add_new_contact/$',
                 views_post.add_new_contact,
                 name='add_new_contact'),
 
