@@ -48,7 +48,7 @@ def change_address(request):
                               key='address.port',
                               value=int(new_vals['port']),
                               **user)
-    elif 'tty' in old_vals:
+    if 'tty' in old_vals:
         if new_vals['tty'] != old_vals['tty']:
             base.db.SetSensorSetting(name, 'address.tty', new_vals['tty'])
             base.db.LogUpdate(name=name,
@@ -125,4 +125,31 @@ def change_reading(request):
                               value=new_val,
                               **user)
 
+    return HttpResponseNotModified()
+
+@require_POST
+def change_contact_status(request):
+    info = request.POST
+    user = client(request.META)
+    db.updateDatabase('settings','contacts',cuts={},updates={'$set' : {'status' : -1}})
+    for key in ['primary', 'secondary1', 'secondary2']:
+        if info[key] != 'None':
+            db.updateDatabase('settings','contacts',cuts={'name' : info[key]},
+                    updates = {'$set' : {'status' : 1}})
+            db.LogUpdate(field='contacts', active=info[key], **user)
+    return HttpResponseNotModified()
+
+@require_POST
+def add_new_contact(request):
+    info = request.POST
+    user = client(request.META)
+    contact = {'name' : info['firstname'] + info['lastname'][0],
+            'email' : info['email'],
+            'sms' : info['sms'],
+            'status' : -1,
+            'first_name' : info['firstname'],
+            'last_name' : info['lastname'],
+            }
+    db.insertIntoDatabase('settings','contacts',contact)
+    db.LogUpdate(field='contacts', new=info['firstname'] + info['lastname'][0], **user)
     return HttpResponseNotModified()

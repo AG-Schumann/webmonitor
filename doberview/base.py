@@ -34,3 +34,13 @@ def index_context(**kwargs):
 
     return context
 
+def contact_context(**kwargs):
+    context = base_context(**kwargs)
+    contacts = []
+    for contact in db.readFromDatabase('settings','contacts'):
+        if contact['name'] in ['MarcS','SebastianL']:
+            continue
+        contacts.append({'name' : contact['name'], 'status' : contact['status']})
+    context.update({'contacts' : contacts})
+
+    return context
