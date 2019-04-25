@@ -15,3 +15,6 @@ def trend(request):
     context = base.trend_context()
     return render(request, 'doberview/trend.html', context)
 
+def contacts(request):
+    context = base.contact_context()
+    return render(request, 'doberview/contacts.html', context)
