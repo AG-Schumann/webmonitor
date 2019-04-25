@@ -63,6 +63,10 @@ urlpatterns = [
                 views_post.change_reading,
                 name='change_reading'),
 
+        path('contacts',
+                views_render.contacts,
+                name='contacts'),
+
         re_path(r'^change_contact_status/$',
                 views_post.change_contact_status,
                 name='change_contact_status'),
