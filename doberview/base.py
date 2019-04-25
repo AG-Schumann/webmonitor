@@ -40,7 +40,7 @@ def contact_context(**kwargs):
     for contact in db.readFromDatabase('settings','contacts'):
         if contact['name'] in ['MarcS','SebastianL']:
             continue
-        contacts.append({contact['name'] : contact['status']})
+        contacts.append({'name' : contact['name'] 'status' : contact['status']})
     context.update({'contacts' : contacts})
 
     return context
