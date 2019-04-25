@@ -8,8 +8,8 @@ from . import base
 
 
 def client(meta):
-    return {'client_addr' : meta['REMOTE_ADDR'],
-            'client_name' : meta['REMOTE_HOST'],
+    return {'client_addr' : meta['REMOTE_ADDR'] if 'REMOTE_ADDR' in meta else 'web',
+            'client_name' : meta['REMOTE_HOST'] if 'REMOTE_HOST' in meta else 'web',
             'client_user' : meta['REMOTE_USER'] if 'REMOTE_USER' in meta else 'web'}
 
 @require_POST

@@ -79,9 +79,9 @@ def get_sensor_details(request, sensor_name=""):
             s += f'IP: <input type="text" name="ip" value="{sensor_doc["address"]["ip"]}"'
             s += r' pattern="\\b(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\b">'
             s += '<br>'
-            s += f'Port: <input type="number" name="port" value="{sensor_doc["address"]["port"]}" step="1">'
+            s += f'Port: <input type="number" name="port" value="{int(sensor_doc["address"]["port"])}" step="1">'
             s += '<br>'
-        elif 'tty' in sensor_doc['address']:
+        if 'tty' in sensor_doc['address']:
             s += f'SerialID: <input type="text" name="serialID" value="{sensor_doc["address"]["serialID"]}">'
             s += '<br>'
             s += f'Serial address: <input type="text" name="tty" value="{sensor_doc["address"]["tty"]}" '
@@ -93,7 +93,7 @@ def get_sensor_details(request, sensor_name=""):
                 s += f'<option value="{baud}" {selected}>{baud}</option>'
             s += '</select>'
             s += '<br>'
-        if len(s) > 1:
+        if len(s) > 27: # magic number
             s += '<button type="submit" value="Submit">Submit</button>'
             s += '<button type="reset" value="Reset">Reset</button>'
         else:
@@ -123,7 +123,7 @@ def get_reading_detail(request, sensor_name="", reading_name=""):
         ret['html']['rd_alarm_list'] += f'<li>Level {i}: Low:<input type="number" name="al_{i}_0" value="{lo}" step="any"> High:<input type="number" name="al_{i}_1" value="{hi}" step="any"></li>'
     ret['html']['rd_cfg_list'] = ''
     for rm,cfg in reading['config'].items():
-        ret['html']['rd_cfg_list'] += f'<li>{rm}: <input type="number" min="-1" step=1 max="{len(reading["alarms"])-1}" value="{cfg["level"]}" name="{rm}_level"></li>'
+        ret['html']['rd_cfg_list'] += f'<li>{rm}: <input type="number" min="-1" step=1 max="{len(reading["alarms"])-1}" value="{int(cfg["level"])}" name="{rm}_level"></li>'
     ret['html']['rd_runmode'] = ''
     for rm in ['default','testing','recovery']:
         selected = 'selected' if rm == reading['runmode'] else ''
