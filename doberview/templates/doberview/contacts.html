@@ -14,6 +14,7 @@
         {% else %}
             <li><b>{{ contact.name }}</b></li>
         {% endif %}
+        {% endfor %}
     </ul>
 
     <form action="{% url 'change_contact_status' %}" method="post">
