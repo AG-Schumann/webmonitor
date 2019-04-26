@@ -131,12 +131,13 @@ def change_reading(request):
 def change_contact_status(request):
     info = request.POST
     user = client(request.META)
-    db.updateDatabase('settings','contacts',cuts={},updates={'$set' : {'status' : -1}})
+    base.db.updateDatabase('settings','contacts',cuts={},updates={'$set' : {'status' : -1}})
     for key in ['primary', 'secondary1', 'secondary2']:
-        if info[key] != 'None':
-            db.updateDatabase('settings','contacts',cuts={'name' : info[key]},
+        name = info[key]
+        if name != 'None':
+            base.db.updateDatabase('settings','contacts',cuts={'name' : name},
                     updates = {'$set' : {'status' : 1}})
-            db.LogUpdate(field='contacts', active=info[key], **user)
+            base.db.LogUpdate(field='contacts', active=name, **user)
     return HttpResponseNotModified()
 
 @require_POST

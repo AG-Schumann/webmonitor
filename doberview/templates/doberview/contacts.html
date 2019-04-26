@@ -18,6 +18,7 @@
     </ul>
 
     <form action="{% url 'change_contact_status' %}" method="post">
+        {% csrf_token %}
         <fieldset>
             <legend>Contact management</legend>
             Primary: <select name="primary">
@@ -42,6 +43,7 @@
         </fieldset>
     </form>
     <form action="{% url 'add_new_contact' %}" method="post">
+        {% csrf_token %}
         <fieldset>
             <legend>New contact</legend>
             <input type="text" placeholder="First name" name="firstname" required>
