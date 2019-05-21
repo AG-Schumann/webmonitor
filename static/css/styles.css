@@ -234,6 +234,18 @@
   border-radius: 3px 0 0 3px;
 }
 
+.tablediv {
+    background-color: #eeeeee;
+    padding: 5px;
+    border-radius: 3px;
+}
+
+.tabhead {
+    background-color: #dddddd;
+    padding: 2px;
+    border-radius: 3px;
+}
+
 table, th, td {
     border: 1px solid black;
     border-collapse: collapse;

@@ -1,12 +1,6 @@
 <!-- base.html -->
 {% load static %}
 
-<style>
-table, th, td {
-    border: 1px solid black;
-    border-collapse: collapse;
-}
-</style>
 <html>
     <head>
         <title>XeBRA DAQ</title>
@@ -18,9 +12,10 @@ table, th, td {
     </head>
 
     <body>
-        <div id="headerbar">
-            <a href="{% url 'index' %}">Index</a>
+        <div id="topmenu" class="navbar">
+            <a href="{% url 'main' %}">Overview</a>
             <a href="{% url 'config' %}">Configurator</a>
+            <a href="{% url 'runs' %}">Runs</a>
             <a href="/doberview/">Slow control</a>
         </div>
         <header>

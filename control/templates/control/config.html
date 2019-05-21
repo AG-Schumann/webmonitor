@@ -5,15 +5,47 @@
 
 {% block content %}
     <div style="background-color:#eeeeee;padding:5px;border-radius:5px">
-        <h2> Config doc configinator 9000 </h2>
-        Select a config: <select name="mode">
+        <h2> Config doc configinatoromatic 9000 </h2>
+        {% if message %}
+            <h3 style="color:#dd0000" id="formmessage">{{ message }}</h3>
+        {% endif %}
+        Select a config: <select name="mode" id="mode_select">
         {% for mode in modes %}
             <option value="{{ mode }}">{{ mode }}</option>
         {% endfor %}
         </select>
         <button type="button" onclick="LoadConfigDoc()">Load</button>
-        <form>
+        <form method="post" id="cfg_form">
             {% csrf_token %}
-            Name: <input type="text" placeholder="name" id="name_field">
-            Include: <input type="text" placeholder="pmt_config, default_registers_tpc", id="include_field">
+            Name: <input type="text" placeholder="name" id="name_field" name="name"
+                required>
+            <br>
+            Includes: <input type="text" placeholder="[pmt_config, default_registers_tpc]"
+                id="include_field" name="include" size=64>
+            <br>
+            Description: <input type="text" placeholder="What this config does"
+                name="description" id="desc_field" required size=48>
+            <br>
+            User: <input type="text" placeholder="Who you are" name="user"
+                id="user_field" required>
+            <br>
+            Detector: <input type="text" placeholder="xebra" name="detector"
+                id="detector_field" required>
+            <br>
+            Content:<br>
+            <textarea name="content" placeholder = "{&quot;some_field&quot; : some_value}"
+                id="content_field" rows="32" cols="128"></textarea>
+            <button type="submit" value="Update"
+                formaction="{% url 'update_cfg' %}">Update</button>
+            <button type="submit" value="Add new"
+                formaction="{% url 'new_cfg' %}">Add new</button>
+            <button type="reset" value="Reset">Reset</button>
+        </form>
+    </div>
+{% endblock %}
 
+{% block javascripts %}
+    <script>
+        window.setTimeout(function() {$("#formmessage").html("");}, 3000)
+    </script>
+{% endblock %}

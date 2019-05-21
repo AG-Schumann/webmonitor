@@ -4,13 +4,34 @@
 {% block subtitle %} DAQ control {% endblock %}
 
 {% block content %}
-    <div style="background-color:#eeeeee;padding:5px:border-radius:5px">
-        <h2 style="background-color:#dddddd;padding:2px;border-radius:3px">Current status</h2>
-        <p id="statusnow">Unknown</p>
-        {% if message %}
-            <p>{{ message }}</p>
-        {% endif %}
-        <table style="width:100%">
+    <div class="tablediv">
+        <h2 class="tabhead">Current status</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Subsystem</th>
+                    <th>Status</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>DAQ</td>
+                    <td id="daqstatus">Unknown</td>
+                    <td id="daqmsg"></td>
+                </tr><tr>
+                    <td>Dispatcher</td>
+                    <td id="spatchstatus">Unknown</td>
+                    <tr id="spatchmsg"></td>
+                </tr><tr>
+                    <td>Autostraxinator</td>
+                    <td id="straxstatus">Unknown</td>
+                    <td id="straxmsg"></td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        <table class="tablediv">
             <tr>
                 <td>
                     <form action="{% url 'start' %}" method="post">
@@ -18,15 +39,16 @@
                         <input type="range" min="1" max="15" value="3" id="durationslide" name="duration">
                         <label for="durationslide" id="durationlabel">Duration</label>
                         <input type="text" name="comment" placeholder="Run comment">
-                        <input type="submit" value="Start" id="startbutton">
+                        <button type="submit" value="Start" id="startbutton">Start</button>
                     </form>
                 </td>
                 <td>
                     <form action="{% url 'stop' %}" method="post">
                         {% csrf_token %}
-                        <input type="submit" value="Stop" id="stopbutton">
+                        <button type="submit" value="Stop" id="stopbutton">Stop</button>
                     </form>
                 </td>
+            </tr><tr>
                 <td>
                     <form action="{% url 'arm' %}" method="post">
                         {% csrf_token %}
@@ -36,34 +58,31 @@
                         {% endfor %}
                         </select>
                         Config override:
-                        <textarea name="config_override" rows="10" cols="32"
-                            placeholder="{\"some_field\" : some_value}">
-                        </textarea>
-                        Custom registers:
-                        <textarea name="registers" rows="10" cols="32"
-                            placeholder="0xADDR 0xVAL">
-                        </textarea>
-                        <input type="submit" value="Arm" id="armbutton">
-                        <input type="reset" value="Reset">
+                        <textarea name="config_override" rows="4" cols="32"
+                            placeholder="{&quot;some_field&quot; : some_value}"></textarea>
+                        <button type="submit" value="Arm" id="armbutton">Arm</button>
+                        <button type="reset" value="Reset">Reset</button>
                     </form>
                 </td>
                 <td>
                     <form action="{% url 'led' %}" method="post">
                         {% csrf_token %}
-                        <input type="submit" value="Do LED calibration" id="ledbutton">
+                        <button type="submit" value="LED calibration" id="ledbutton">LED calibration</button>
                     </form>
                 </td>
             </tr>
         </table>
     </div>
     <br>
-    <div style="background-color:#eeeeee;padding:5px:border-radius:5px">
-        <h2 style="background-color:#dddddd;padding:2px;border-radius:3px">Status history</h2>
-        <table style="width:100%">
+    <div class="tablediv">
+        <h2 class="tabhead"> Status history</h2>
+        <table>
             <tr>
                 <th>Time</th>
                 <th>Rate (MB/s)</th>
-                <th>Pulse frequency</th>
+                <th>Status</th>
+                <th>Run id</th>
+                <th>Run mode</th>
             </tr>
             <tbody id="historytable"></tbody>
         </table>
@@ -71,21 +90,23 @@
 
     <br>
 
-    <div style="background-color:#eeeeee;padding:5px:border-radius:5px">
-        <h2 style="background-color:#dddddd;padding:2px;border-radius:3px">Recent runs</h2>
-        <table style="width:100%">
+    <div class="tablediv">
+        <h2 class="tabhead">Recent runs</h2>
+        <table>
             <tr>
-                <th>Number</th>
-                <th>Name</th>
+                <th>Identifier</th>
                 <th>Mode</th>
                 <th>Start</th>
                 <th>End</th>
                 <th>Duration (s)</th>
+                <th>User</th>
             </tr>
             <tbody id="runstable"></tbody>
         </table>
     </div>
+{% endblock %}
 
+{% block javascripts %}
     <script>
         var slider = document.getElementById('durationslide');
         var label = document.getElementById('durationlabel');
@@ -97,8 +118,7 @@
             UpdateRuns();
             UpdateStatusHistory();
         }
-        window.setInterval(UpdateRuns, 30000);
         window.setInterval(UpdateStatus, 1000);
-        window.setInterval(UpdateStatusHistory, 5000);
+        //window.setInterval(UpdateStatusHistory, 5000);
     </script>
 {% endblock %}
