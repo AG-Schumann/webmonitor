@@ -151,6 +151,6 @@ def add_new_contact(request):
             'first_name' : info['firstname'],
             'last_name' : info['lastname'],
             }
-    db.insertIntoDatabase('settings','contacts',contact)
-    db.LogUpdate(field='contacts', new=info['firstname'] + info['lastname'][0], **user)
+    base.db.insertIntoDatabase('settings','contacts',contact)
+    base.db.LogUpdate(field='contacts', new=info['firstname'] + info['lastname'][0], **user)
     return HttpResponseNotModified()
