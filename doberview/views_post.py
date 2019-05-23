@@ -2,6 +2,7 @@ from django.http import JsonResponse, HttpResponseNotModified
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
+from django.contrib.auth import authenticate, login, logout
 
 import datetime
 
@@ -131,3 +132,19 @@ def change_reading(request):
                               **user)
 
     return HttpResponseNotModified()
+
+@require_POST
+def log_in(request):
+    username = request.POST['username']
+    password = request.POST['password']
+    user = authenticate(request, username=username, password=username)
+    if user is not None:
+        login(request, user)
+        if 'next' in request.POST:
+            return redirect(request.POST['next'])
+        return redirect('/doberview/')
+    return redirect('/account/login/')
+
+def log_out(request):
+    logout(request)
+    return redirect()

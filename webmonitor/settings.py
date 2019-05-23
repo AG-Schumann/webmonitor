@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_pam',
     'doberview',
     'control',
 ]
@@ -47,7 +46,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    #'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -56,8 +55,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'webmonitor.urls'
 
 AUTHENTICATION_BACKENDS = [
-    'django_pam.auth.backends.PAMBackend',
-    #'django.contrib.auth.backends.ModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 TEMPLATES = [
@@ -85,7 +83,7 @@ WSGI_APPLICATION = 'webmonitor.wsgi.application'
 DATABASES = {
         'default' : {
             'ENGINE' : 'django.db.backends.sqlite3',
-            'NAME' : 'thisisatest',
+            'NAME' : 'thisisnotadrill.py',
             }
 }
 

@@ -21,8 +21,11 @@
             <a href="{% url 'detail' %}">Sensor details</a>
             <a href="{% url 'trend' %}">Trend</a>
             <a href="/control/">DAQ</a>
-            <a href="{% url 'login' %}">Login</a>
-            <a href="{% url 'logout' %}?next={{ next }}">Logout</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+            {% endif %}
         </div>
 
         <header>
@@ -40,5 +43,7 @@
     {% endblock %}
 
     </body>
+
+    {% block modals %}{% endblock %}
 
 </html>

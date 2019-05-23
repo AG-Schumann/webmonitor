@@ -2,6 +2,8 @@ from django.urls import path, re_path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from django_pam.accounts.views import LoginView, LogoutView
+
 from . import views_render
 from . import views_post
 from . import views_get
@@ -63,12 +65,7 @@ urlpatterns = [
                 views_post.change_reading,
                 name='change_reading'),
 
-        re_path(r'^django-pam/', include('django_pam.urls')),
-        re_path(r'^login/$',
-                views_render.login,
-                name='login'),
-        re_path(r'^logout/(?P<next>[\w\-\:/]+)?$',
-                views_render.logout,
-                name='logout'),
+        re_path(r'^/account/login/$', views_render.login, name='log_in'),
+        re_path(r'^/account/logout/$', views_render.logout, name='log_out'),
 
         ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
