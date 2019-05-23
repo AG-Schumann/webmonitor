@@ -1,14 +1,14 @@
 {% extends "control/base.html" %}
 <!-- config.html -->
 
-{% block subtitle %} DAQ config {% endblock %}
+{% block subtitle %} DAQ Confignatron 9000 {% endblock %}
 
 {% block content %}
     <div style="background-color:#eeeeee;padding:5px;border-radius:5px">
-        <h2> Config doc configinatoromatic 9000 </h2>
         {% if message %}
             <h3 style="color:#dd0000" id="formmessage">{{ message }}</h3>
         {% endif %}
+        <h4>See documentation <a href="https://coderdj.github.io/redax/daq_options.html">here</a></h4>
         Select a config: <select name="mode" id="mode_select">
         {% for mode in modes %}
             <option value="{{ mode }}">{{ mode }}</option>
@@ -17,10 +17,16 @@
         <button type="button" onclick="LoadConfigDoc()">Load</button>
         <form method="post" id="cfg_form">
             {% csrf_token %}
-            Name: <input type="text" placeholder="name" id="name_field" name="name"
+            <button type="submit" value="Update"
+                formaction="{% url 'cfg' act='update' %}">Update</button>
+            <button type="submit" value="Add new"
+                formaction="{% url 'cfg' act='new' %}">Add new</button>
+            <button type="reset" value="Reset">Reset</button>
+            <br>
+            Name: <input type="text" placeholder="background" id="name_field" name="name"
                 required>
             <br>
-            Includes: <input type="text" placeholder="[pmt_config, default_registers_tpc]"
+            Includes: <input type="text" placeholder="board_config, default_registers"
                 id="include_field" name="include" size=64>
             <br>
             Description: <input type="text" placeholder="What this config does"
@@ -34,18 +40,13 @@
             <br>
             Content:<br>
             <textarea name="content" placeholder = "{&quot;some_field&quot; : some_value}"
-                id="content_field" rows="32" cols="128"></textarea>
-            <button type="submit" value="Update"
-                formaction="{% url 'update_cfg' %}">Update</button>
-            <button type="submit" value="Add new"
-                formaction="{% url 'new_cfg' %}">Add new</button>
-            <button type="reset" value="Reset">Reset</button>
+                id="content_field" rows="24" cols="128"></textarea>
         </form>
     </div>
 {% endblock %}
 
 {% block javascripts %}
     <script>
-        window.setTimeout(function() {$("#formmessage").html("");}, 3000)
+        window.setTimeout(function() {$("#formmessage").html("");}, 5000)
     </script>
 {% endblock %}

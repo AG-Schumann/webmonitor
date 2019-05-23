@@ -53,42 +53,27 @@ def led(request):
     return redirect('main', msgcode='msg_led')
 
 @require_POST
-def new_cfg(request):
+def cfg(request, act='update'):
     vals = request.POST
     doc = {}
-    if vals['name'] in base.db['options'].distinct('name'):
+    if act=='new' and vals['name'] in base.db['options'].distinct('name'):
         return redirect('config', msgcode='err_name_exists')
+    if act=='update' and vals['name'] not in base.db['options'].distinct('name'):
+        return redirect('config', msgcode='err_no_name_exists')
+
     for key in ['name', 'description', 'user', 'detector']:
         doc[key] = vals[key]
     if 'include' in vals:
         doc['include'] = list(map(lambda s : s.strip(' '),
-                                  vals['include'].strip('[]').split(',')))
+                                  vals['include'].split(',')))
         if len(doc['include']) == 1 and doc['include'][0] == '':
             del doc['include']
     try:
-        doc.update(json.loads(vals['content']))
+        if 'content' in vals and len(vals['content']) > 2:
+            doc.update(json.loads(vals['content']))
     except:
         return redirect('config', msgcode='err_invalid_json')
-    base.db['options'].insert_one(doc)
-    return redirect('config', msgcode='msg_new_cfg')
-
-@require_POST
-def update_cfg(request):
-    vals = request.POST
-    doc = {}
-    if vals['name'] not in base.db['options'].distinct('name'):
-        return redirect('config', msgcode='err_no_name_exists')
-    for key in ['description', 'user', 'detector']:
-        doc[key] = vals[key]
-    if 'include' in vals:
-        doc['include'] = list(map(lambda s : s.strip(' '),
-                                  vals['include'].strip('[]').split(',')))
-        if len(doc['include']) == 1 and doc['include'][0] == '':
-            del doc['include']
-    try:
-        doc.update(json.loads(vals['content']))
-    except:
-        return redirect('config', msgcode='err_invalid_json')
-    base.db['options'].update_one({'name' : vals['name']}, {'$set' : doc})
-    return redirect('config', msgcode='msg_cfg_update')
+    base.db['options'].replace_one({'name' : vals['name']}, doc, upsert=True)
+    msgcode = 'msg_new_cfg' if act=='new' else 'msg_cfg_update'
+    return redirect('config', msgcode=msgcode)
 

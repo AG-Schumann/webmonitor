@@ -36,7 +36,7 @@ def user(meta):
             'client_user' : meta['REMOTE_USER'] if 'REMOTE_USER' in meta else 'web'}
 
 def base_context(msgcode=None):
-    modes = db['options'].distinct('name', {'detector' : 'xebra'})
+    modes = db['options'].distinct('name', {'detector' : {'$ne' : 'include'}})
     if 'bkg' in modes:
         modes.remove('bkg')
         modes = ['bkg'] + modes
@@ -45,7 +45,7 @@ def base_context(msgcode=None):
     context = {}
     context['modes'] = modes
     if msgcode is not None:
-        context.update({'message' : message_codes.get(msgcode, '')})
+        context.update({'message' : message_codes.get(msgcode, '?')})
 
     return context
 
@@ -64,7 +64,7 @@ def runs_context(**kwargs):
 def UpdateDaqspatcher(req, **kwargs):
     kwargs.update({'user': user(req.META)['client_user']})
     print('Updating with args:', kwargs)
-    db['system_control'].update_one({'subsystem' : 'daq'}, {'$set' : kwargs})
+    db['system_control'].update_one({'subsystem' : 'daqspatcher'}, {'$set' : kwargs})
     return
 
 def CurrentStatus():

@@ -51,6 +51,10 @@ def get_status(request):
     status_doc = base.db['system_control'].find_one({'subsystem' : 'straxinator'})
     ret['straxstatus'] = status_doc['status']
     ret['straxmsg'] = status_doc['msg'] if status_doc['msg'] else ''
+
+    status_doc = base.db['system_control'].find_one({'subsystem' : 'pulser'})
+    ret['ledstatus'] = status_doc['status']
+    #ret['ledmsg'] = status_doc['msg'] if status_doc['msg'] else ''
     return JsonResponse(ret)
 
 def get_cfg_doc(request, name):
