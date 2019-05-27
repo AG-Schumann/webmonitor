@@ -5,6 +5,56 @@
 
 {% block content %}
 <div class="tablediv">
-    <h2 class="tabhead">Move along citizen, nothing to see here</h2>
+    <!--    <h2 class="tabhead">Runs database</h2> -->
+
+    <div>
+        <h4>Select experiment:</h4>
+        <select id="exp_name">
+            {% for experiment in experiments %}
+            <option value={{ experiment }}>{{ experiment }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" value="Load" onclick="LoadRuns()">Load</button>
+    </div>
+
+    <table class="runstable">
+        <thead>
+            <tr class="tabheader">
+                <th colspan="7">Do you know <a href="https://xkcd.com/208">regular expressions</a>?</th>
+            </tr><tr class="tabheader">
+                <th>
+                    <button type="submit" id="straxbutton" onclick="GenerateStraxList()">Generate strax datalist</button>
+                </th><th colspan="6" id="straxlist"></th>
+            </tr>
+            <tr class="tabheader">
+                <th>Run id</th>
+                <th>Run mode</th>
+                <th>Run start</th>
+                <th>Run duration</th>
+                <th>User</th>
+                <th>Comment</th>
+                <th>Actions</th>
+            </tr>
+            <tr id="runs_columns" class="tabheader">
+                <td><input type="text" placeholder="filter"
+                    onkeyup="FilterRunsTable(0)"></td>
+                <td><input type="text" placeholder="filter"
+                    onkeyup="FilterRunsTable(1)"></td>
+                <td><input type="text" placeholder="filter"
+                    onkeyup="FilterRunsTable(2)"></td>
+                <td><input type="text" placeholder="filter"
+                    onkeyup="FilterRunsTable(3)"></td>
+                <td><input type="text" placeholder="filter"
+                    onkeyup="FilterRunsTable(4)"></td>
+                <td><input type="text" placeholder="filter"
+                    onkeyup="FilterRunsTable(5)"></td>
+                <td><button type="reset" value="Reset" onclick="ResetTable()">Reset</button></td>
+            </tr>
+        </thead>
+        <tbody id="runs_table_body">
+            <tr><td colspan="7">Nothing here yet...</td></tr>
+        </tbody>
+        <tfoot></tfoot>
+    </table>
 </div>
 {% endblock %}

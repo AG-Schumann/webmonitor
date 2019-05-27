@@ -5,16 +5,20 @@ from . import base
 from pymongo.son_manipulator import ObjectId
 
 
-def get_runs(request, limit=5):
+def get_runs(request, experiment="xebra", limit=None):
     runs = []
-    for row in base.db['runs'].find({},{'config' : 0}).sort([('number', -1)]).limit(5):
+    query = {'experiment' : experiment}
+    projection = 'run_id mode start end duration user comment'.split()
+    cursor = base.db['runs'].find(query, projection).sort([('run_id', -1)])
+    if limit is not None:
+        cursor.limit(int(limit))
+    for row in cursor:
         if 'end' in row:
             end = row['end'].strftime('%Y-%m-%d %H:%M')
             duration = (row['end']-row['start']).total_seconds()
         else:
             end = 'active'
             duration = (datetime.datetime.now() - row['start']).total_seconds()
-
         doc = {
                 'run_id' : '%i' % row['run_id'],
                 'mode' : row['mode'],
@@ -22,6 +26,7 @@ def get_runs(request, limit=5):
                 'end' : end,
                 'duration' : '%i' % duration,
                 'user' : row['user'],
+                'comment' : row['comment'] if 'comment' in row else '',
         }
         runs.append(doc)
     return JsonResponse({'runs' : runs})
