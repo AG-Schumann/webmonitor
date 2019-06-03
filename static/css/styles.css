@@ -321,3 +321,21 @@ th {
     display: block;
 }
 
+#runstable {
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid #ddd;
+}
+
+#runstable th, #runstable td {
+    text-align: left;
+    padding: 12px;
+}
+
+#runstable tr {
+    border-bottom: 1px solid #ddd;
+}
+
+.rmbtn {
+    color: red;
+}

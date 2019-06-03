@@ -58,6 +58,7 @@ def config_context(**kwargs):
 
 def runs_context(**kwargs):
     context = base_context(**kwargs)
+    context.update({'experiments' : db['runs'].distinct('experiment')})
 
     return context
 
