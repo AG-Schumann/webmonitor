@@ -14,12 +14,3 @@ def trend(request):
     context = base.trend_context()
     return render(request, 'doberview/trend.html', context)
 
-def login(request):
-    context = base.base_context()
-
-    return render(request, 'doberview/login.html', context)
-
-def logout(request):
-    context = base.base_context()
-
-    return render(request, 'doberview/logout.html', context)

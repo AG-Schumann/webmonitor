@@ -65,7 +65,4 @@ urlpatterns = [
                 views_post.change_reading,
                 name='change_reading'),
 
-        re_path(r'^/account/login/$', views_render.login, name='log_in'),
-        re_path(r'^/account/logout/$', views_render.logout, name='log_out'),
-
         ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <title></title>
+        <meta charset='utf-8'>
+    </head>
+
+    <body>
+        <header>
+            <h1> Here is a webpage </h1>
+        </header>
+
+        <p><strong>Login via <a href="{% url 'social:begin' 'github' %}">GitHub</a></strong></p>
+        <form method="post">
+            <fieldset>
+                <legend>Admin login</legend>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">Login</button>
+            </fieldset>
+        </form>
+    </body>
