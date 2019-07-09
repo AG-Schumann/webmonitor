@@ -1,6 +1,6 @@
 // scripts go here
 function UpdateStatus(){
-    $.getJSON('get_status', function(data) {
+    $.getJSON('/control/get_status', function(data) {
         var buttons = [];
         if (data['daqstatus'] === 'offline') {
             buttons = [true, true, true, true];
@@ -9,7 +9,7 @@ function UpdateStatus(){
         } else if (data['daqstatus'] === 'arming') {
             buttons = [true, true, true, true];
         } else if (data['daqstatus'] === 'armed') {
-            buttons = [false, true, true, true];
+            buttons = [false, false, true, true];
         } else if (data['daqstatus'] === 'running') {
             buttons = [true, false, true, true];
         } else if (data['daqstatus'] === 'error') {
@@ -20,6 +20,7 @@ function UpdateStatus(){
         $("#startbutton").attr("disabled", buttons[0]);
         $("#stopbutton").attr("disabled", buttons[1]);
         $("#armbutton").attr("disabled", buttons[2]);
+        $("#armresetbtn").attr("disabled", buttons[2]);
         $("#ledbutton").attr("disabled", buttons[3]);
         for (var key in data) {
             $("#" + key).html(data[key]);
@@ -28,15 +29,17 @@ function UpdateStatus(){
 }
 
 function UpdateStatusHistory(){
-    $.getJSON('get_status_history', function(data) {
+    $.getJSON('/control/get_status_history', function(data) {
         var html = "";
-        for (var i = 0; i < data.length; i += 1) {
+        console.log(data);
+        var d = data['rows'];
+        for (var i = 0; i < d.length; i += 1) {
             html += "<tr>";
-            html += "<td>" + data['rows'][i]['time'] + "</td>";
-            html += "<td>" + data['rows'][i]['rate'] + "</td>";
-            html += "<td>" + data['rows'][i]['status'] + "</td>";
-            html += "<td>" + data['rows'][i]['run_id'] + "</td>";
-            html += "<td>" + data['rows'][i]['run_mode'] + "</td>";
+            html += "<td>" + d[i]['time'] + "</td>";
+            html += "<td>" + d[i]['rate'] + "</td>";
+            html += "<td>" + d[i]['status'] + "</td>";
+            html += "<td>" + d[i]['run_id'] + "</td>";
+            html += "<td>" + d[i]['run_mode'] + "</td>";
             html += "</tr>";
         }
         $("#historytable").html(html);
@@ -44,7 +47,7 @@ function UpdateStatusHistory(){
 }
 
 function UpdateRuns(){
-    $.getJSON('get_runs/xebra/5', function(data) {
+    $.getJSON('/control/get_runs/xebra/5', function(data) {
         var html = "";
         var d = data['runs'];
         for (var i = 0; i < d.length; i += 1) {
@@ -63,7 +66,7 @@ function UpdateRuns(){
 
 function LoadConfigDoc() {
     var name = $("#mode_select").val();
-    $.getJSON('get_cfg_doc/' + name + '/', function(data) {
+    $.getJSON('/control/get_cfg_doc/' + name + '/', function(data) {
         $("#name_field").val(data['name']);
         delete data['name'];
         $("#desc_field").val(data['description']);
@@ -73,7 +76,7 @@ function LoadConfigDoc() {
         $("#detector_field").val(data['detector']);
         delete data['detector'];
         if ("includes" in data) {
-            $("#include_field").val(data['include']);
+            $("#include_field").val(data['includes']);
             delete data['includes'];
         } else {
             $("#include_field").val("");
@@ -84,7 +87,7 @@ function LoadConfigDoc() {
 
 function LoadRuns() {
     var name = $("#exp_name").val();
-    $.getJSON("get_runs/" + name + "/", function(data) {
+    $.getJSON("/control/get_runs/" + name + "/", function(data) {
         var html = "";
         var runs = data['runs'];
         for (var i = 0; i < runs.length; i += 1) {
@@ -95,6 +98,7 @@ function LoadRuns() {
             html += "<td>" + runs[i]["duration"] + "</td>";
             html += "<td>" + runs[i]["user"] + "</td>";
             html += "<td>" + runs[i]["comment"] + "</td>";
+            html += "<td>" + runs[i]["run_id_abs"] + "</td>";
             html += "<td>" + "<button class=\"rmbtn\" onclick=\"RemoveRow(" + i + ")\">X</button>" + "</td>";
             html += "</tr>";
         }

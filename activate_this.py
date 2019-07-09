@@ -19,11 +19,14 @@ for item in list(sys.path):
         sys.path.remove(item)
 sys.path[:0] = new_sys_path
 # set env variables
-env_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+#env_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+env_dir = '/software/anaconda3/envs/server'
 dir_to_activate = os.path.join(env_dir, 'etc/conda/activate.d')
 for filename in os.listdir(dir_to_activate):
     with open(os.path.join(dir_to_activate,filename), 'r') as f:
         for line in f:
+            if line[0] == '#':
+                continue
             m = re.search('export (?P<key>[^=]+)=\'(?P<value>.+)\'$', line)
             if m:
                 os.environ[m.group('key')] = m.group('value')

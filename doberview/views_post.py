@@ -1,4 +1,4 @@
-from django.http import JsonResponse, HttpResponseNotModified
+from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.shortcuts import redirect
 
@@ -16,24 +16,24 @@ def client(meta):
 def startstop(request):
     name = request.POST['sensor_name']
     if name not in base.db.Distinct('settings','sensors','name'):
-        return HttpResponseNotModified()
+        return redirect('detail')
     status = base.db.GetSensorSetting(name, 'status')
     user = client(request.META)
     if status == 'online':
         base.db.ProcessCommandStepOne('stop %s' % name, user=user)
     elif status == 'offline':
         base.db.ProcessCommandStepOne('start %s' % name, user=user)
-    return HttpResponseNotModified()
+    return redirect('detail')
 
 @require_POST
 def change_address(request):
     new_vals = request.POST
     name = new_vals['sensor_name']
     if name not in base.db.Distinct('settings','sensors','name'):
-        return HttpResponseNotModified()
+        return redirect('detail')
     old_vals = base.db.GetSensorSetting(name, 'address')
     if old_vals is None:
-        return HttpResponseNotModified()
+        return redirect('detail')
     user = client(request.META)
     if 'ip' in old_vals:
         if new_vals['ip'] != old_vals['ip']:
@@ -67,24 +67,24 @@ def change_address(request):
                               key='address.baud',
                               value=int(new_vals['baud']),
                               **user)
-    return HttpResponseNotModified()
+    return redirect('detail')
 
 @require_POST
 def log_command(request):
     user = client(request.META)
     base.db.ProcessCommandStepOne(request.POST['command'], user=user)
-    return HttpResponseNotModified()
+    return redirect('detail')
 
 @require_POST
 def change_reading(request):
     new_vals = request.POST
     name = new_vals['sensor_name']
     if name not in base.db.Distinct('settings','sensors','name'):
-        return HttpResponseNotModified()
+        return redirect('detail')
     reading_name = new_vals['reading_name']
     old_vals = base.db.GetReading(name, reading_name)
     if old_vals is None:
-        return HttpResponseNotModified()
+        return redirect('detail')
     user = client(request.META)
     for key,func in zip(['status', 'readout_interval', 'recurrence', 'runmode'],
                         [str, int, int, str]):
@@ -102,7 +102,8 @@ def change_reading(request):
         alarms = [float(new_vals[f'al_{lvl}_0'])]+alarms+[float(new_vals[f'al_{lvl}_1'])]
     for i in range(len(alarms)-1):
         if alarms[i] >= alarms[i+1]:
-            return redirect(f'/doberview/detail/01/')
+            return redirect('detail', error_code='01')
+            #return redirect(f'/doberview/detail/01/')
     del alarms
     for lvl, alarms in enumerate(old_vals['alarms']):
         for i, al in enumerate(alarms):
@@ -125,7 +126,7 @@ def change_reading(request):
                               value=new_val,
                               **user)
 
-    return HttpResponseNotModified()
+    return redirect('detail')
 
 @require_POST
 def change_contact_status(request):
@@ -138,7 +139,7 @@ def change_contact_status(request):
             base.db.updateDatabase('settings','contacts',cuts={'name' : name},
                     updates = {'$set' : {'status' : 1}})
             base.db.LogUpdate(field='contacts', active=name, **user)
-    return HttpResponseNotModified()
+    return redirect('contacts')
 
 @require_POST
 def add_new_contact(request):
@@ -153,4 +154,4 @@ def add_new_contact(request):
             }
     base.db.insertIntoDatabase('settings','contacts',contact)
     base.db.LogUpdate(field='contacts', new=info['firstname'] + info['lastname'][0], **user)
-    return HttpResponseNotModified()
+    return redirect('contacts')

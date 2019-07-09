@@ -8,7 +8,7 @@ from pymongo.son_manipulator import ObjectId
 def get_runs(request, experiment="xebra", limit=None):
     runs = []
     query = {'experiment' : experiment}
-    projection = 'run_id mode start end duration user comment'.split()
+    projection = 'run_id run_id_unsrt mode start end duration user comment'.split()
     cursor = base.db['runs'].find(query, projection).sort([('run_id', -1)])
     if limit is not None:
         cursor.limit(int(limit))
@@ -18,9 +18,10 @@ def get_runs(request, experiment="xebra", limit=None):
             duration = (row['end']-row['start']).total_seconds()
         else:
             end = 'active'
-            duration = (datetime.datetime.now() - row['start']).total_seconds()
+            duration = (datetime.datetime.utcnow() - row['start']).total_seconds()
         doc = {
                 'run_id' : '%i' % row['run_id'],
+                'run_id_abs' : '%i' % row['run_id_unsrt'],
                 'mode' : row['mode'],
                 'start' : row['start'].strftime('%Y-%m-%d %H:%M'),
                 'end' : end,
@@ -45,9 +46,13 @@ def get_status_history(request):
 
 def get_status(request):
     ret = {}
-    status_doc = base.db['system_control'].find_one({'subsystem' : 'daq'})
-    ret['daqstatus'] = status_doc['status']
-    ret['daqmsg'] = status_doc['msg'] if status_doc['msg'] else ''
+    #status_doc = base.db['system_control'].find_one({'subsystem' : 'daq'})
+    #ret['daqstatus'] = status_doc['status']
+    #ret['daqmsg'] = status_doc['msg'] if status_doc['msg'] else ''
+    ret['daqstatus'] = base.CurrentStatus()
+    ret['daqmsg'] = ''
+    for doc in base.db['log'].find({}).sort([('_id', -1)]).limit(1):
+        ret['daqmsg'] = doc['message']
 
     status_doc = base.db['system_control'].find_one({'subsystem' : 'daqspatcher'})
     ret['spatchstatus'] = status_doc['status']

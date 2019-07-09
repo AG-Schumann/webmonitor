@@ -20,11 +20,11 @@
     <table class="runstable">
         <thead>
             <tr class="tabheader">
-                <th colspan="7">Do you know <a href="https://xkcd.com/208">regular expressions</a>?</th>
+                <th colspan="8">Do you know <a href="https://xkcd.com/208">regular expressions</a>?</th>
             </tr><tr class="tabheader">
                 <th>
                     <button type="submit" id="straxbutton" onclick="GenerateStraxList()">Generate strax datalist</button>
-                </th><th colspan="6" id="straxlist"></th>
+                </th><th colspan="7" id="straxlist"></th>
             </tr>
             <tr class="tabheader">
                 <th>Run id</th>
@@ -33,6 +33,7 @@
                 <th>Run duration</th>
                 <th>User</th>
                 <th>Comment</th>
+                <th>Run id (abs)</th>
                 <th>Actions</th>
             </tr>
             <tr id="runs_columns" class="tabheader">
@@ -48,11 +49,13 @@
                     onkeyup="FilterRunsTable(4)"></td>
                 <td><input type="text" placeholder="filter"
                     onkeyup="FilterRunsTable(5)"></td>
+                <td><input type="text" placeholder="filter"
+                    onkeyup="FilterRunsTable(6)"></td>
                 <td><button type="reset" value="Reset" onclick="ResetTable()">Reset</button></td>
             </tr>
         </thead>
         <tbody id="runs_table_body">
-            <tr><td colspan="7">Nothing here yet...</td></tr>
+            <tr><td colspan="8">Nothing here yet...</td></tr>
         </tbody>
         <tfoot></tfoot>
     </table>

@@ -11,8 +11,6 @@ def base_context(**kwargs):
     context = {}
     context.update(kwargs)
     sensor_names = sorted(db.Distinct('settings','sensors','name'))
-    sensor_names.remove('TestSensor')
-    sensor_names.remove('baris_test')
     context['sensors'] = sensor_names
 
     return context

@@ -14,15 +14,14 @@ def start(request):
         duration = int(request.POST['duration'])*60
     except KeyError:
         duration = 180
-    print('Starting with duration %i' % duration)
-    base.UpdateDaqspatcher(request, duration=duration, goal='start')
+    base.UpdateDaqspatcher(request, duration=duration, goal='start',
+            comment=request.POST['comment'])
     return redirect('main', msgcode='msg_start')
 
 @require_POST
 def stop(request):
-    if base.CurrentStatus() != 'running':
+    if base.CurrentStatus() not in ['armed','running']:
         return redirect('main', msgcode='err_not_running')
-    print('Stopping')
     base.UpdateDaqspatcher(request, goal='stop')
     return redirect('main', msgcode='msg_stop')
 
@@ -35,21 +34,18 @@ def arm(request):
             'goal' : 'arm',
             }
     if 'config_override' in params and len(params['config_override']) > 1:
-        print(params['config_override'])
         try:
             kwargs['config_override'] = json.loads(params['config_override'])
         except:
             return redirect('main', msgcode='err_invalid_json')
     else:
         kwargs['config_override'] = {}
-    print('Arming for %s' % params['mode'])
-    print(params['config_override'])
     base.UpdateDaqspatcher(request, **kwargs)
     return redirect('main', msgcode='msg_arm')
 
 @require_POST
 def led(request):
-    print('LED')
+    base.UpdateDaqspatcher(request, goal='led')
     return redirect('main', msgcode='msg_led')
 
 @require_POST
@@ -63,11 +59,11 @@ def cfg(request, act='update'):
 
     for key in ['name', 'description', 'user', 'detector']:
         doc[key] = vals[key]
-    if 'include' in vals:
-        doc['include'] = list(map(lambda s : s.strip(' '),
-                                  vals['include'].split(',')))
-        if len(doc['include']) == 1 and doc['include'][0] == '':
-            del doc['include']
+    if 'includes' in vals:
+        doc['includes'] = list(map(lambda s : s.strip(' '),
+                                  vals['includes'].split(',')))
+        if len(doc['includes']) == 1 and doc['includes'][0] == '':
+            del doc['includes']
     try:
         if 'content' in vals and len(vals['content']) > 2:
             doc.update(json.loads(vals['content']))

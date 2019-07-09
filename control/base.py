@@ -1,8 +1,9 @@
 from pymongo import MongoClient
 import os
+import time
 
 
-_client = MongoClient(os.environ['dispatcher_uri'])
+_client = MongoClient(os.environ['MONGO_DAQ_URI'])
 db = _client['xebra_daq']
 
 message_codes = {
@@ -39,9 +40,9 @@ def base_context(msgcode=None):
     modes = db['options'].distinct('name', {'detector' : {'$ne' : 'include'}})
     if 'bkg' in modes:
         modes.remove('bkg')
-        modes = ['bkg'] + modes
-    if 'led' in modes:
-        modes.remove('led')
+        modes = ['bkg'] + sorted(modes)
+    #if 'led' in modes:
+    #    modes.remove('led')
     context = {}
     context['modes'] = modes
     if msgcode is not None:
@@ -63,13 +64,12 @@ def runs_context(**kwargs):
     return context
 
 def UpdateDaqspatcher(req, **kwargs):
-    kwargs.update({'user': user(req.META)['client_user']})
-    print('Updating with args:', kwargs)
+    kwargs.update({'user': user(req.META)['client_addr'].split('.')[-1]})
     db['system_control'].update_one({'subsystem' : 'daqspatcher'}, {'$set' : kwargs})
     return
 
 def CurrentStatus():
     for row in db['status'].find({}).sort([('_id',-1)]).limit(1):
-        if time.time() - int(str(row['_id'])[:8],16) > 20:
+        if time.time() - int(str(row['_id'])[:8],16) > 10:
             return 'offline'
         return status_map[int(row['status'])]

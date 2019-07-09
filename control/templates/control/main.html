@@ -6,6 +6,7 @@
 {% block content %}
     <div class="tablediv">
         <h2 class="tabhead">Current status</h2>
+        <h4>{% if message %}{{ message }}{% endif %}</h4>
         <table>
             <thead>
                 <tr>
@@ -16,18 +17,21 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>Dispatcher</td>
-                    <td id="spatchstatus">Unknown</td>
-                    <tr id="spatchmsg"></td>
-                </tr><tr>
                     <td>DAQ</td>
                     <td id="daqstatus">Unknown</td>
                     <td id="daqmsg"></td>
-                </tr><tr>
+                </tr>
+                <tr>
+                    <td>Dispatcher</td>
+                    <td id="spatchstatus">Unknown</td>
+                    <td id="spatchmsg"></td>
+                </tr>
+                <tr>
                     <td>Strax-o-matic</td>
                     <td id="straxstatus">Unknown</td>
                     <td id="straxmsg"></td>
-                </tr><tr>
+                </tr>
+                <tr>
                     <td>LED pulser</td>
                     <td id="ledstatus">Unknown</td>
                     <td id="ledmsg"></td>
@@ -66,7 +70,7 @@
                         <textarea name="config_override" rows="4" cols="32"
                             placeholder="{&quot;some_field&quot; : some_value}"></textarea>
                         <button type="submit" value="Arm" id="armbutton">Arm</button>
-                        <button type="reset" value="Reset">Reset</button>
+                        <button type="reset" value="Reset" id="armresetbtn">Reset</button>
                     </form>
                 </td>
                 <td>
@@ -121,9 +125,10 @@
         }
         window.onload = function() {
             UpdateRuns();
+            UpdateStatus();
             UpdateStatusHistory();
         }
         window.setInterval(UpdateStatus, 1000);
-        //window.setInterval(UpdateStatusHistory, 5000);
+        window.setInterval(UpdateStatusHistory, 1300);
     </script>
 {% endblock %}
