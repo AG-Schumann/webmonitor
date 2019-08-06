@@ -7,6 +7,16 @@ _error_codes = {
         '01' : 'Invalid alarm values'
         }
 
+def client(meta):
+    return {'client_addr' : meta['REMOTE_ADDR'] if 'REMOTE_ADDR' in meta else 'web',
+            'client_name' : meta['REMOTE_HOST'] if 'REMOTE_HOST' in meta else 'web',
+            'client_user' : meta['REMOTE_USER'] if 'REMOTE_USER' in meta else 'web'}
+
+def is_schumann_subnet(meta):
+    ip = client(meta)['client_addr']
+    subnet, _ = ip.rsplit('.', maxsplit=1)
+    return subnet=='10.4.73'
+
 def base_context(**kwargs):
     context = {}
     context.update(kwargs)

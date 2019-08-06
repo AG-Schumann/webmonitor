@@ -6,19 +6,15 @@ import datetime
 
 from . import base
 
-
-def client(meta):
-    return {'client_addr' : meta['REMOTE_ADDR'] if 'REMOTE_ADDR' in meta else 'web',
-            'client_name' : meta['REMOTE_HOST'] if 'REMOTE_HOST' in meta else 'web',
-            'client_user' : meta['REMOTE_USER'] if 'REMOTE_USER' in meta else 'web'}
-
 @require_POST
 def startstop(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('index')
     name = request.POST['sensor_name']
     if name not in base.db.Distinct('settings','sensors','name'):
         return redirect('detail')
     status = base.db.GetSensorSetting(name, 'status')
-    user = client(request.META)
+    user = base.client(request.META)
     if status == 'online':
         base.db.ProcessCommandStepOne('stop %s' % name, user=user)
     elif status == 'offline':
@@ -27,6 +23,8 @@ def startstop(request):
 
 @require_POST
 def change_address(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('index')
     new_vals = request.POST
     name = new_vals['sensor_name']
     if name not in base.db.Distinct('settings','sensors','name'):
@@ -34,7 +32,7 @@ def change_address(request):
     old_vals = base.db.GetSensorSetting(name, 'address')
     if old_vals is None:
         return redirect('detail')
-    user = client(request.META)
+    user = base.client(request.META)
     if 'ip' in old_vals:
         if new_vals['ip'] != old_vals['ip']:
             base.db.SetSensorSetting(name, 'address.ip', new_vals['ip'])
@@ -71,12 +69,16 @@ def change_address(request):
 
 @require_POST
 def log_command(request):
-    user = client(request.META)
+    if not base.is_schumann_subnet(request.META):
+        return redirect('index')
+    user = base.client(request.META)
     base.db.ProcessCommandStepOne(request.POST['command'], user=user)
     return redirect('detail')
 
 @require_POST
 def change_reading(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('index')
     new_vals = request.POST
     name = new_vals['sensor_name']
     if name not in base.db.Distinct('settings','sensors','name'):
@@ -85,7 +87,7 @@ def change_reading(request):
     old_vals = base.db.GetReading(name, reading_name)
     if old_vals is None:
         return redirect('detail')
-    user = client(request.META)
+    user = base.client(request.META)
     for key,func in zip(['status', 'readout_interval', 'recurrence', 'runmode'],
                         [str, int, int, str]):
         new_val = func(new_vals[key])  # django doesn't typecast
@@ -130,8 +132,10 @@ def change_reading(request):
 
 @require_POST
 def change_contact_status(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('index')
     info = request.POST
-    user = client(request.META)
+    user = base.client(request.META)
     base.db.updateDatabase('settings','contacts',cuts={},updates={'$set' : {'status' : -1}})
     for key in ['primary', 'secondary1', 'secondary2']:
         name = info[key]
@@ -143,8 +147,10 @@ def change_contact_status(request):
 
 @require_POST
 def add_new_contact(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('index')
     info = request.POST
-    user = client(request.META)
+    user = base.client(request.META)
     contact = {'name' : info['firstname'] + info['lastname'][0],
             'email' : info['email'],
             'sms' : info['sms'],
