@@ -8,6 +8,8 @@ from . import base
 
 @require_POST
 def start(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('main', msgcode='err_not_auth')
     if base.CurrentStatus() != 'armed':
         return redirect('main', msgcode='err_not_armed')
     try:
@@ -20,6 +22,8 @@ def start(request):
 
 @require_POST
 def stop(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('main', msgcode='err_not_auth')
     if base.CurrentStatus() not in ['armed','running']:
         return redirect('main', msgcode='err_not_running')
     base.UpdateDaqspatcher(request, goal='stop')
@@ -27,6 +31,8 @@ def stop(request):
 
 @require_POST
 def arm(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('main', msgcode='err_not_auth')
     if base.CurrentStatus() != 'idle':
         return redirect('main', msgcode='err_not_idle')
     params = request.POST
@@ -45,11 +51,15 @@ def arm(request):
 
 @require_POST
 def led(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('main', msgcode='err_not_auth')
     base.UpdateDaqspatcher(request, goal='led')
     return redirect('main', msgcode='msg_led')
 
 @require_POST
 def cfg(request, act='update'):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('main', msgcode='err_not_auth')
     vals = request.POST
     doc = {}
     if act=='new' and vals['name'] in base.db['options'].distinct('name'):

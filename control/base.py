@@ -13,6 +13,7 @@ message_codes = {
     'err_invalid_json' : 'Invalid JSON',
     'err_name_exists' : 'A config with that name already exists, you can\'t add a new one',
     'err_no_name_exists' : 'No config with that name exists, you can\'t update it',
+    'err_not_auth' : 'Authorization failed',
 
     'msg_start' : 'DAQ starting',
     'msg_arm' : 'DAQ arming',
@@ -35,6 +36,11 @@ def user(meta):
     return {'client_addr' : meta['REMOTE_ADDR'] if 'REMOTE_ADDR' in meta else 'web',
             'client_name' : meta['REMOTE_HOST'] if 'REMOTE_HOST' in meta else 'web',
             'client_user' : meta['REMOTE_USER'] if 'REMOTE_USER' in meta else 'web'}
+
+def is_schumann_subnet(meta):
+    ip = user(meta)['client_addr']
+    subnet, _ = ip.rsplit('.', maxsplit=1)
+    return subnet=='10.4.73'
 
 def base_context(msgcode=None):
     modes = db['options'].distinct('name', {'detector' : {'$ne' : 'include'}})
