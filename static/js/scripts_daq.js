@@ -28,6 +28,10 @@ function UpdateStatus(){
     });
 }
 
+function UpdateProgressBar(fraction) {
+    var width = 1;
+}
+
 function UpdateStatusHistory(){
     $.getJSON('/control/get_status_history', function(data) {
         var html = "";
