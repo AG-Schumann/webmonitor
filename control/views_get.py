@@ -8,7 +8,7 @@ from pymongo.son_manipulator import ObjectId
 def get_runs(request, experiment="xebra", limit=None):
     runs = []
     query = {'experiment' : experiment}
-    projection = 'run_id run_id_unsrt mode start end duration user comment'.split()
+    projection = 'run_id tags mode start end duration user comment'.split()
     cursor = base.db['runs'].find(query, projection).sort([('run_id', -1)])
     if limit is not None:
         cursor.limit(int(limit))
@@ -21,12 +21,14 @@ def get_runs(request, experiment="xebra", limit=None):
             duration = (datetime.datetime.utcnow() - row['start']).total_seconds()
         doc = {
                 'run_id' : '%i' % row['run_id'],
-                'run_id_abs' : '%i' % row['run_id_unsrt'],
+                'tags' : row['tags'],
                 'mode' : row['mode'],
                 'start' : row['start'].strftime('%Y-%m-%d %H:%M'),
                 'end' : end,
                 'duration' : '%i' % duration,
                 'user' : row['user'],
+                'meshes' : ('%d/%d' % (doc['cathode_mean'], doc['anode_mean'])
+                    if 'anode_mean' in doc else '-/-')
                 'comment' : row['comment'] if 'comment' in row else '',
         }
         runs.append(doc)

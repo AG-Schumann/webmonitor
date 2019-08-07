@@ -5,9 +5,8 @@
 
 {% block content %}
 <div class="tablediv">
-    <!--    <h2 class="tabhead">Runs database</h2> -->
 
-    <div>
+    <div class="runstablediv">
         <h4>Select experiment:</h4>
         <select id="exp_name">
             {% for experiment in experiments %}
@@ -20,20 +19,20 @@
     <table class="runstable">
         <thead>
             <tr class="tabheader">
-                <th colspan="8">Do you know <a href="https://xkcd.com/208">regular expressions</a>?</th>
+                <th colspan="8" style="background-color:#444466">Do you know <a href="https://xkcd.com/208">regular expressions</a>?</th>
             </tr><tr class="tabheader">
                 <th>
                     <button type="submit" id="straxbutton" onclick="GenerateStraxList()">Generate strax datalist</button>
-                </th><th colspan="7" id="straxlist"></th>
-            </tr>
-            <tr class="tabheader">
+                </th><th colspan="8" id="straxlist"></th>
+            </tr><tr class="tabheader">
                 <th>Run id</th>
                 <th>Run mode</th>
                 <th>Run start</th>
                 <th>Run duration</th>
                 <th>User</th>
                 <th>Comment</th>
-                <th>Run id (abs)</th>
+                <th>Meshes</th>
+                <th>Tags</th>
                 <th>Actions</th>
             </tr>
             <tr id="runs_columns" class="tabheader">
@@ -51,13 +50,52 @@
                     onkeyup="FilterRunsTable(5)"></td>
                 <td><input type="text" placeholder="filter"
                     onkeyup="FilterRunsTable(6)"></td>
+                <td><button type="submit" value="Tags" onclick="TabSelect()">Tags</button></td>
                 <td><button type="reset" value="Reset" onclick="ResetTable()">Reset</button></td>
             </tr>
         </thead>
         <tbody id="runs_table_body">
-            <tr><td colspan="8">Nothing here yet...</td></tr>
+            <tr><td colspan="9">Nothing here yet, try selecting an experiment</td></tr>
         </tbody>
         <tfoot></tfoot>
     </table>
 </div>
+
+<div class="rundetail">
+
+</div>
+
+<div class="tagdetail">
+    <div>
+        <strong>Tags to include:</strong>
+        <button id="resetincludetags" type="reset" value="Reset">Reset</button>
+        <ul id="includetags">
+            <li id="include0" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+            <li id="include1" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+            <li id="include2" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+            <li id="include3" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+        </ul>
+    </div><div>
+        <strong>Tags to exclude:</strong>
+        <button id="resetexcludetags" type="reset" value="Reset">Reset</button>
+        <ul id="excludetags">
+            <li id="exclude0" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+            <li id="exclude1" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+            <li id="exclude2" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+            <li id="exclude3" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+    $(document).onload = function() {
+        $("#include0").style.display = "";
+        $("#exclude0").style.display = "";
+        for (var i = 0; i < 4; i+= 1) {
+            $("#include" + i).oninput = TabSelect();
+            $("#exclude" + i).oninput = TabReject();
+        }
+    }
 {% endblock %}
