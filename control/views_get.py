@@ -75,3 +75,18 @@ def get_cfg_doc(request, name):
         return JsonResponse({'name' : '', 'description' : '', 'user' : '', 'detector' : ''})
     del doc['_id']
     return JsonResponse(doc)
+
+def get_run_detail(request, experiment, runid):
+    runid = f'{int(runid):05d}'
+    doc = base.db['runs'].find_one({'experiment' : experiment, 'run_id' : runid})
+    if doc is None:
+        return JsonResponse({})
+    del doc['_id']
+    if 'end' in doc:
+        doc['duration'] = (doc['end']-doc['start']).total_seconds()
+        doc['end'] = doc['end'].isoformat(sep=' ')
+    else:
+        doc['duration'] = 'Active'
+        doc['end'] = 'None'
+    doc['start'] = doc['start'].isoformat(sep=' ')
+    return JsonResponse(doc)

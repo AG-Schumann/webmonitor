@@ -1,20 +1,21 @@
 {% extends "control/base.html" %}
 <!-- runs.html -->
 
+{% block headers %}
+    <script src="{% static 'js/scripts_daq_runs.js' %}"></script>
+{% endblock %}
+
 {% block subtitle %}Runs database{% endblock %}
 
 {% block content %}
-<div class="tablediv">
-
-    <div class="runstablediv">
-        <h4>Select experiment:</h4>
-        <select id="exp_name">
-            {% for experiment in experiments %}
-            <option value={{ experiment }}>{{ experiment }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit" value="Load" onclick="LoadRuns()">Load</button>
-    </div>
+<div class="runstablediv">
+    <h4>Select experiment:</h4>
+    <select id="exp_name">
+        {% for experiment in experiments %}
+        <option value={{ experiment }}>{{ experiment }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" value="Load" onclick="LoadRuns()">Load</button>
 
     <table class="runstable">
         <thead>
@@ -50,7 +51,7 @@
                     onkeyup="FilterRunsTable(5)"></td>
                 <td><input type="text" placeholder="filter"
                     onkeyup="FilterRunsTable(6)"></td>
-                <td><button type="submit" value="Tags" onclick="TabSelect()">Tags</button></td>
+                <td><button type="submit" value="Tags" onclick="ToggleTagDetail()">Tags</button></td>
                 <td><button type="reset" value="Reset" onclick="ResetTable()">Reset</button></td>
             </tr>
         </thead>
@@ -59,43 +60,63 @@
         </tbody>
         <tfoot></tfoot>
     </table>
-</div>
+</div> <!-- runstablediv -->
 
 <div class="rundetail">
-
-</div>
+    <button type="submit" value="Hide" onclick="HideTabs()">Hide</button>
+    <ul>
+        <li id="d_run_id">Run id:</li>
+        <li id="d_run_mode">Run mode:</li>
+        <li id="d_run_start">Run start time:</li>
+        <li id="d_run_end">Run end time:</li>
+        <li id="d_run_dur">Run duration:</li>
+        <li id="d_run_user">Run started by:</li>
+        <li id="d_run_comment">Comments:</li>
+        <li>Stored data:</li>
+            <ul id="d_run_data"></ul>
+    </ul><br>
+    <form target="/control/runs/update_runs/" method="POST">
+        <fieldset>
+            <legend>Tags</legend>
+            <input type="text" disabled hidden id="exp_name">
+            <ul id="d_run_tags"></ul>
+            <button type="submit" value="Submit changes">Submit changes</button>
+            <button type="reset" value="Reset">Reset</button>
+        </fieldset>
+    </form><br>
+    <u>Run Config:</u>
+    <p id="d_run_config" style="font-family: monospace;"></p>
+    </ul>
+</div> <!-- rundetail -->
 
 <div class="tagdetail">
-    <div>
-        <strong>Tags to include:</strong>
-        <button id="resetincludetags" type="reset" value="Reset">Reset</button>
-        <ul id="includetags">
-            <li id="include0" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
-            <li id="include1" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
-            <li id="include2" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
-            <li id="include3" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
-        </ul>
-    </div><div>
-        <strong>Tags to exclude:</strong>
-        <button id="resetexcludetags" type="reset" value="Reset">Reset</button>
-        <ul id="excludetags">
-            <li id="exclude0" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
-            <li id="exclude1" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
-            <li id="exclude2" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
-            <li id="exclude3" class="cludetag"><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
-        </ul>
-    </div>
-</div>
+    <button type="submit" value="Hide" onclick="HideTabs()">Hide</button>
+    <form>
+        {% csrf_token %}
+        <fieldset>
+            <legend>Tags to include</legend>
+            <ul id="includetags">
+                <li><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+                <li><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+                <li><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+                <li><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+            </ul>
+        </fieldset><fieldset>
+            <legend>Tags to exclude:</legend>
+            <ul id="excludetags">
+                <li><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+                <li><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+                <li><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+                <li><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
+            </ul>
+        </fieldset>
+        <button type="submit" value="Submit" onclick="FilterRunsByTags()">Submit</button>
+        <button type="reset" value="Reset">Reset</button>
+    </form>
+</div> <!-- tagdetail -->
 {% endblock %}
 
 {% block javascripts %}
     <script>
-    $(document).onload = function() {
-        $("#include0").style.display = "";
-        $("#exclude0").style.display = "";
-        for (var i = 0; i < 4; i+= 1) {
-            $("#include" + i).oninput = TabSelect();
-            $("#exclude" + i).oninput = TabReject();
-        }
-    }
+    </script>
 {% endblock %}
