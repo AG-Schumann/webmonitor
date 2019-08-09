@@ -19,8 +19,6 @@ function UpdateStatus(){
         }
         $("#startbutton").attr("disabled", buttons[0]);
         $("#stopbutton").attr("disabled", buttons[1]);
-        $("#armbutton").attr("disabled", buttons[2]);
-        $("#armresetbtn").attr("disabled", buttons[2]);
         $("#ledbutton").attr("disabled", buttons[3]);
         for (var key in data) {
             $("#" + key).html(data[key]);
