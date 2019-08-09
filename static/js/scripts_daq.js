@@ -23,7 +23,11 @@ function UpdateStatus(){
         $("#armresetbtn").attr("disabled", buttons[2]);
         $("#ledbutton").attr("disabled", buttons[3]);
         for (var key in data) {
-            $("#" + key).html(data[key]);
+            if (key === 'runprogress') {
+                $("#" + key).val(data[key]);
+            } else {
+                $("#" + key).html(data[key]);
+            }
         }
     });
 }
