@@ -1,6 +1,10 @@
-from Doberman import DobermanDB
+from pymongo import MongoClient
+from Doberman import Database
 
-db = DobermanDB.DobermanDB(appname='webmonitor')
+with open('/home/darryl/Work/doberman/connection_uri','r') as f:
+    client = MongoClient(f.read().strip())
+    db = Database(client, appname='webmonitor')
+    db.experiment_name = 'xebra'
 
 _error_codes = {
         '00' : 'No error',

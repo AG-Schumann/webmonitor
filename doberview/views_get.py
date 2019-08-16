@@ -2,6 +2,8 @@ from django.http import JsonResponse, HttpResponseNotModified
 from django.views.decorators.http import require_GET
 
 from . import base
+import datetime
+from urllib.parse import unquote
 
 
 @require_GET
@@ -145,101 +147,6 @@ def getreadings(request, name):
     return JsonResponse(ret)
 
 @require_GET
-def getdata(request, *args):
-    """
-    Pulls data for one chart from the database, returns an object
-    to be passed directly to plotly
-    """
-    #start_time = base.db.GetField()  # TODO finish
-    start_time = datetime.datetime(2019,2,18,0,0,0)
-    names = base.db.Distinct('settings','sensors','name')
-    data = []
-    num_pts = 40000  # max number of points to plot
-    decimate_after = 3600  # data older than this many seconds is decimated
-    colors = ['rgb(0,0,220)','rgb(0,220,0)', 'rgb(220,0,0)']
-    earliest_t = 0
-    layout = {
-            'xaxis' : {'type' : 'log', 'autorange' : False,
-                'title' : '<-- then | Time before now (log) | now -->'},
-            'showlegend' : False,
-        }
-    config = {
-            'staticPlot' : True,
-            }
-    min_y = 0
-    max_y = 1
-    for i,s in enumerate(*args):
-        try:
-            name, index = s.split('__')
-            index = int(index)
-            assert name in names
-        except:
-            continue
-        cfg_doc = base.db.GetSensorSettings(name)
-        if index >= len(cfg_doc['readings']):
-            continue
-        description = cfg_doc['readings'][index]['description']
-        points = np.array(base.db.GetData(name=name, index=index, start_time=start_time),
-                          dtype=[('ts', np.int64), ('v', np.float32)])
-        print('Got %i points for %s' % (len(points), s))
-        if not len(points):
-            continue
-        points['ts'] = points['ts'][-1] - points['ts'] + 1  # time before now
-        if points['ts'][0] > decimate_after and len(points) > num_pts:  # decimate
-            num_old_pts = np.count_nonzero(points['ts'] > decimate_after)
-            num_new_pts = len(points) - num_old_pts
-            if num_new_pts > num_pts:  # not likely but possible
-                points = points[points['ts'] < decimate_after]
-            else:
-                rows_to_keep = np.arange(num_new_pts)
-                rows_to_keep = np.append(rows_to_keep,
-                        num_new_pts + np.linspace(start=0,
-                                                  stop=num_old_pts,
-                                                  num=num_pts-num_new_pts,
-                                                  endpoint=False,
-                                                  dtype=np.int32))
-                points = points[len(points) - rows_to_keep - 1]
-
-        print(points['ts'][0])
-        print(points['ts'][-1])
-        earliest_t = max(earliest_t, points['ts'][0])
-        data.append({
-            'mode' : 'lines',
-            'x' : list(map(int, points['ts'])),  # have to uncast from numpy types
-            'y' : list(map(float, points['v'])),  # so json encoding works
-            'line' : {'color' : colors[i%3], 'width' : 1}
-            })
-        if i == 0:
-            key = 'yaxis'
-            min_y = float(points['v'].min())
-            max_y = float(points['v'].max())
-        else:
-            key = 'yaxis%i' % (i+1)
-        layout[key] = {
-            'title' : description,
-            'titlefont' : {'color' : colors[i%3]},
-            'tickfont' : {'color' : colors[i%3]},
-            }
-        if i > 0:
-            data[-1]['yaxis'] = 'y%i' % (i+1)
-    layout['xaxis']['range'] = [np.log10(earliest_t), 1]
-    if len(data) > 1:
-        layout['grid'] = {'pattern' : 'coupled',
-                          'rows' : len(data),
-                }
-    for l,t in zip(['minute','hour','day','week'],[60,3600,86400,86400*7]):
-        if t > earliest_t:
-            break
-        data.append({
-            'mode' : 'line',
-            'x' : [t,t],
-            'y' : [min_y, max_y],
-            'line' : {'dash' : 'dot', 'width' : 3, 'color' : 'rgb(192,192,192)'}
-            })
-
-    return JsonResponse({'data' : data, 'layout' : layout, 'config' : config})
-
-@require_GET
 def getoverview(request):
     tabs = {}
     status_docs = base.db.GetCurrentStatus()
@@ -264,3 +171,33 @@ def getoverview(request):
                 tabs[key] += '</tr><tr>'
             tabs[key] = tabs[key][:-4]
     return JsonResponse(tabs)
+
+@require_GET
+def get_shifts(request, start, end):
+    start = datetime.datetime.fromisoformat(start)
+    end = datetime.datetime.fromisoformat(end)
+    shifts = []
+    for shift in base.db.readFromDatabase('settings','shifts',
+            {'end' : {'$gte' : start},
+              'start' : {'$lte' : end}}):
+        shifts.append({
+            'id' : shift['key'],
+            'start' : shift['start'].isoformat(),
+            'end' : shift['end'].isoformat(),
+            'editable' : False,
+            'title' : 'Primary: %s; Secondary: %s, %s' % tuple(shift['shifters'])
+            })
+
+    return JsonResponse({'events' : shifts})
+
+def get_shift_detail(request, date):
+    shift = base.db.readFromDatabase('settings','shifts',
+            {'key' : date}, onlyone=True)
+    if shift is None:
+        return JsonResponse({})
+    return JsonResponse({'primary' : shift['shifters'][0],
+        'secondary1' : shift['shifters'][1],
+        'secondary2' : shift['shifters'][2],
+        'start' : shift['start'].isoformat(sep=' ')[:16],
+        'end' : shift['end'].isoformat(sep=' ')[:16],
+        })
