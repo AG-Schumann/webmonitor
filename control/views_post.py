@@ -4,13 +4,36 @@ from django.views.decorators.http import require_POST
 import datetime
 import json
 from . import base
+import time
 
 
 @require_POST
 def start(request):
     if not base.is_schumann_subnet(request.META):
         return redirect('main', msgcode='err_not_auth')
-    if base.CurrentStatus() != 'armed':
+    if base.CurrentStatus() != 'idle':
+        return redirect('main', msgcode='err_not_idle')
+    params = request.POST
+    kwargs = {'mode' : params['mode'],
+            'goal' : 'arm',
+            }
+    if 'config_override' in params and len(params['config_override']) > 1:
+        try:
+            kwargs['config_override'] = json.loads(params['config_override'])
+        except:
+            return redirect('main', msgcode='err_invalid_json')
+    else:
+        kwargs['config_override'] = {}
+    base.UpdateDaqspatcher(request, **kwargs)
+    time.sleep(3)  # one sec for dispatcher, one for daq, one extra
+    for _ in range(10):
+        status = base.CurrentStatus()
+        if status not in ['arming','armed']:
+            return redirect('main', msgcode='err_not_armed')
+        if status == 'armed':
+            break
+        time.sleep(1)
+    else:
         return redirect('main', msgcode='err_not_armed')
     try:
         duration = int(request.POST['duration'])*60
@@ -28,26 +51,6 @@ def stop(request):
         return redirect('main', msgcode='err_not_running')
     base.UpdateDaqspatcher(request, goal='stop')
     return redirect('main', msgcode='msg_stop')
-
-@require_POST
-def arm(request):
-    if not base.is_schumann_subnet(request.META):
-        return redirect('main', msgcode='err_not_auth')
-    if base.CurrentStatus() != 'idle':
-        return redirect('main', msgcode='err_not_idle')
-    params = request.POST
-    kwargs = {'mode' : params['mode'],
-            'goal' : 'arm',
-            }
-    if 'config_override' in params and len(params['config_override']) > 1:
-        try:
-            kwargs['config_override'] = json.loads(params['config_override'])
-        except:
-            return redirect('main', msgcode='err_invalid_json')
-    else:
-        kwargs['config_override'] = {}
-    base.UpdateDaqspatcher(request, **kwargs)
-    return redirect('main', msgcode='msg_arm')
 
 @require_POST
 def led(request):

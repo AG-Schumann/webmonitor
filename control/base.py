@@ -14,6 +14,7 @@ message_codes = {
     'err_name_exists' : 'A config with that name already exists, you can\'t add a new one',
     'err_no_name_exists' : 'No config with that name exists, you can\'t update it',
     'err_not_auth' : 'Authorization failed',
+    'err_not_armed' : 'DAQ couldn\'t arm',
 
     'msg_start' : 'DAQ starting',
     'msg_arm' : 'DAQ arming',

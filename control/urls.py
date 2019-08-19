@@ -10,7 +10,6 @@ urlpatterns = [
 
         path('start', views_post.start, name='start'),
         path('stop', views_post.stop, name='stop'),
-        path('arm', views_post.arm, name='arm'),
         path('led', views_post.led, name='led'),
 
         re_path('^get_status$', views_get.get_status, name='get_status'),
