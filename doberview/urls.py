@@ -31,9 +31,13 @@ urlpatterns = [
                 views_get.getreadings,
                 name='getreadings'),
 
-        re_path('r^getdata/(?:([^/]+)/)+$',
-                views_get.getdata,
-                name='getdata'),
+        re_path(r'^get_shifts/(?P<start>20(?:19|2[0-9])-(?:0[1-9]|1[012])-(?:[012][0-9]|3[01]))/(?P<end>20(?:19|2[0-9])-(?:0[1-9]|1[012])-(?:[012][0-9]|3[01]))/$',
+                views_get.get_shifts,
+                name='get_shifts'),
+
+        re_path(r'^get_shift_detail/(?P<date>(?:2019|202[0-9])-(?:0[1-9]|1[01])-(?:0[1-9]|[12][0-9]|3[01]))/$',
+                views_get.get_shift_detail,
+                name='get_shift_detail'),
 
         path('trend',
              views_render.trend,
@@ -67,9 +71,9 @@ urlpatterns = [
                 views_render.contacts,
                 name='contacts'),
 
-        re_path(r'change_contact_status/$',
-                views_post.change_contact_status,
-                name='change_contact_status'),
+        re_path(r'update_shift/$',
+                views_post.update_shift,
+                name='update_shift'),
 
         re_path(r'add_new_contact/$',
                 views_post.add_new_contact,

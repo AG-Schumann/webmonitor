@@ -1,6 +1,3 @@
-var default_names = ['cryocon_22c__0/cryocon_22c__1/cryocon_22c__2/',
-    'Teledyne__0/', 'iseries1__0/'];
-
 function PopulateReadingDropdown(chartnum, sensor_name) {
     // called in trend
     console.log('Got ' + sensor_name);
@@ -10,58 +7,6 @@ function PopulateReadingDropdown(chartnum, sensor_name) {
             html += "<option value='"+i+"'>"+data['readings'][i]+"</option>";
         }
         $("#chart"+chartnum+"reading").html(html);
-    });
-}
-
-function SetUserChart(chartnum, sensor_name, reading_i) {
-    // called in trend
-    var name = sensor_name + "__" + reading_i;
-    $('#chartu' + chartnum + '_name').html(name);
-    DrawChart(chartnum, name);
-}
-
-function UpdateCharts() {
-    // called in trend
-    for (var i = 0; i < 3; i += 1) {
-        $.getJSON('getdata/' + default_names[i], function(data) {
-            var elem_name = "chartd" + i;
-            $("#" + elem_name).data = data['data'];
-            $("#" + elem_name).layout = data['layout'];
-            Plotly.redraw(elem_name);
-        });
-        if ($("#chartu" + i + "_name").html() != "None") {
-            $.getJSON('getdata/' + $("#chartu" + i + "_name") + '/', function(data) {
-                var elem_name = "chartu" + i;
-                $("#" + elem_name).data = data['data'];
-                $("#" + elem_name).layout = data['layout'];
-                Plotly.redraw(elem_name);
-            });
-        }
-    }
-}
-
-function DrawCharts() {
-    // called in trend
-    // can't forloop because fuck javascript
-    $.getJSON('getdata/' + default_names[0], function(data) {
-        var elem_name = 'chartd0';
-        Plotly.newPlot(elem_name, data['data'], data['layout'], data['config']);
-    });
-    $.getJSON('getdata/' + default_names[1], function(data) {
-        var elem_name = 'chartd1';
-        Plotly.newPlot(elem_name, data['data'], data['layout'], data['config']);
-    });
-    $.getJSON('getdata/' + default_names[2], function(data) {
-        var elem_name = 'chartd2';
-        Plotly.newPlot(elem_name, data['data'], data['layout'], data['config']);
-    });
-}
-
-function DrawChart(chartid, name) {
-    // called in trend
-    $.getJSON('getdata/' + name + '/', function(data) {
-        var elem_name = "chartu" + chartid;
-        Plotly.newPlot(elem_name, data['data'], data['layout'], data['config']);
     });
 }
 
@@ -162,4 +107,35 @@ function UpdateAlarms() {
         }
         $("#alarmtable").html(html);
     });
+}
+
+function UpdateShift(ev) {
+    if (new Date() > ev.start) {
+        return;
+    }
+    $("#shift_modal").css("display", "block");
+    var start = ev.start.toISOString().slice(0,10);
+    $.getJSON('get_shift_detail/' + start + '/', function(data) {
+        if (!data) {
+            return;
+        }
+        $("#shift_start").html(data['start']);
+        $("#shift_end").html(data['end']);
+        if (data['primary'] != '') {
+            $("#primary_sel option:contains(" + data['primary'] + ")").prop({selected: true});
+            $("#primary_sel option.first").prop({selected: false});
+        }
+        if (data['secondary1'] != '') {
+            $("#secondary1_sel option:contains(" + data['secondary1'] + ")").prop({selected: true});
+            $("#secondary1_sel option.first").prop({selected: false});
+        }
+        if (data['secondary2'] != '') {
+            $("#secondary2_sel option:contains(" + data['secondary2'] + ")").prop({selected: true});
+            $("#secondary2_sel option.first").prop({selected: false});
+        }
+    });
+}
+
+function CloseModal() {
+    $("#shift_modal").css("display", "none");
 }

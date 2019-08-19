@@ -131,18 +131,16 @@ def change_reading(request):
     return redirect('detail')
 
 @require_POST
-def change_contact_status(request):
+def update_shift(request):
     if not base.is_schumann_subnet(request.META):
         return redirect('index')
     info = request.POST
     user = base.client(request.META)
-    base.db.updateDatabase('settings','contacts',cuts={},updates={'$set' : {'status' : -1}})
-    for key in ['primary', 'secondary1', 'secondary2']:
-        name = info[key]
-        if name != 'None':
-            base.db.updateDatabase('settings','contacts',cuts={'name' : name},
-                    updates = {'$set' : {'status' : 1}})
-            base.db.LogUpdate(field='contacts', active=name, **user)
+    shift_key = info['shift_key']
+    shifters = [info[k] if info[k] != 'None' else '' for k in ['primary', 'secondary1', 'secondary2']]
+    base.db.updateDatabase('settings','shifts', cuts={'shift_key' : shift_key},
+            updates = {'$set' : {'shifters' : shifters}})
+    base.db.LogUpdate(field='contacts', shift_key=shift_id, shifters=shifters, **user)
     return redirect('contacts')
 
 @require_POST

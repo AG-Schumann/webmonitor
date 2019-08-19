@@ -1,47 +1,46 @@
 {% extends "doberview/base.html" %}
 <!-- contacts.html -->
 
-{% block subtitle %}Contact management{% endblock %}
+{% block extrahead %}
+<link href='https://unpkg.com/@fullcalendar/core@4.3.0/main.min.css' rel='stylesheet' />
+<link href='https://unpkg.com/@fullcalendar/daygrid@4.3.0/main.min.css' rel='stylesheet' />
+<script src='https://unpkg.com/@fullcalendar/core@4.3.0/main.min.js'></script>
+<script src='https://unpkg.com/@fullcalendar/daygrid@4.3.0/main.min.js'></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var calendarEl = document.getElementById("calendar");
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                plugins: ['dayGrid'],
+                defaultView: 'dayGridMonth',
+                defaultDate: new Date().toISOString().slice(0,10),
+                header: {left: 'prev', center: 'title', right: 'next'},
+                firstDay: 1,  // Monday
+                eventClick: function(info) {UpdateShift(info.event);},
+                events: function(info, success, failure) {
+                    var start = info.startStr.slice(0,10);
+                    var end = info.endStr.slice(0,10);
+                    $.getJSON('get_shifts/' + start + '/' + end + '/', function(data) {
+                        if (data.events.length < 1) {
+                            failure({message:"No shifts in this duration"});
+                        } else {
+                            success(data.events);
+                        }
+                    }); // getJSON
+                }, // events function
+            }); // calendar c'tor
+            calendar.render();
+        });
+    </script>
+{% endblock %}
+
+{% block subtitle %}Shifts and contact management{% endblock %}
 
 {% block content %}
 
 <div>
-    <h3>Available contacts</h3>
-    <ul>
-        {% for contact in contacts %}
-        {% if contact.status == -1 %}
-            <li>{{ contact.name }}</li>
-        {% else %}
-            <li><b>{{ contact.name }}</b></li>
-        {% endif %}
-        {% endfor %}
-    </ul>
+    <div id='calendar'></div>
+    <br>
 
-    <form action="{% url 'change_contact_status' %}" method="post">
-        {% csrf_token %}
-        <fieldset>
-            <legend>Contact management</legend>
-            Primary: <select name="primary">
-                <option value="None" selected>None</option>
-                {% for contact in contacts %}
-                <option value="{{ contact.name }}">{{ contact.name }}</option>
-                {% endfor %}
-            </select>
-            Secondary: <select name="secondary1">
-                <option value="None" selected>None</option>
-                {% for contact in contacts %}
-                <option value="{{ contact.name }}">{{ contact.name }}</option>
-                {% endfor %}
-            </select>
-            Secondary: <select name="secondary2">
-                <option value="None" selected>None</option>
-                {% for contact in contacts %}
-                <option value="{{ contact.name }}">{{ contact.name }}</option>
-                {% endfor %}
-            </select>
-            <input type="submit" value="Submit">
-        </fieldset>
-    </form>
     <form action="{% url 'add_new_contact' %}" method="post">
         {% csrf_token %}
         <fieldset>
@@ -55,4 +54,49 @@
     </form>
 </div>
 
+<div id="shift_modal" class="shift_modal">
+    <div class="shift_modal_content">
+        <form action="{% url 'update_shift' %}" method="post">
+            {% csrf_token %}
+            <input type="text" id="shift_key" name="shift_key" hidden>
+            Shift from <span id="shift_start"></span> to <span id="shift_end"></span>
+            <fieldset>
+                <legend>Primary</legend>
+                <select id="primary_sel" name="primary">
+                    <option value="None" selected>None</option>
+                    {% for contact in contacts %}
+                    <option value="{{ contact.name }}">{{ contact.name }}</option>
+                    {% endfor %}
+               </select>
+            </fieldset><fieldset>
+                <legend>Secondary</legend>
+                    <select id="secondary1_sel" name="secondary1">
+                    <option value="None" selected>None</option>
+                    {% for contact in contacts %}
+                    <option value="{{ contact.name }}">{{ contact.name }}</option>
+                    {% endfor %}
+                </select>
+                <select id="secondary2_sel" name="secondary2">
+                    <option value="None" selected>None</option>
+                    {% for contact in contacts %}
+                    <option value="{{ contact.name }}">{{ contact.name }}</option>
+                    {% endfor %}
+                </select>
+            </fieldset>
+            <button type="submit" value="Submit">Submit</button>
+            <button type="reset" value="Reset">Reset</button>
+        </form>
+        <button onclick="CloseModal()">Close</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        window.onclick = function(event) {
+            if (event.target == $("shift_modal")) {
+                $("shift_modal").css("display","none");
+            }
+        }
+    </script>
 {% endblock %}
