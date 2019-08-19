@@ -57,6 +57,12 @@ def get_status(request):
     status_doc = base.db['system_control'].find_one({'subsystem' : 'daqspatcher'})
     ret['spatchstatus'] = status_doc['status']
     ret['spatchmsg'] = status_doc['msg'] if status_doc['msg'] else ''
+    if ret['daqstatus'] == 'running':
+        run_duration = status_doc['duration']
+        run_start = base.db['runs'].find_one({},{'start' : 1}.sort([('_id', -1)])['start']
+        ret['runprogress'] = '%d' % ((datetime.datetime.utcnow()-run_start).total_seconds()/run_duration*100)
+    else:
+        ret['runprogress'] = '0'
 
     status_doc = base.db['system_control'].find_one({'subsystem' : 'straxinator'})
     ret['straxstatus'] = status_doc['status']
@@ -65,6 +71,10 @@ def get_status(request):
     status_doc = base.db['system_control'].find_one({'subsystem' : 'pulser'})
     ret['ledstatus'] = status_doc['status']
     #ret['ledmsg'] = status_doc['msg'] if status_doc['msg'] else ''
+
+    if ret['daqstatus'] == 'running':  # add progress bar
+        rundoc = ''
+        ret['runprogress'] = '%i'
     return JsonResponse(ret)
 
 def get_cfg_doc(request, name):
