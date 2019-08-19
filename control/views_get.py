@@ -8,7 +8,7 @@ from pymongo.son_manipulator import ObjectId
 def get_runs(request, experiment="xebra", limit=None):
     runs = []
     query = {'experiment' : experiment}
-    projection = 'run_id run_id_unsrt mode start end duration user comment'.split()
+    projection = 'run_id tags mode start end duration user comment'.split()
     cursor = base.db['runs'].find(query, projection).sort([('run_id', -1)])
     if limit is not None:
         cursor.limit(int(limit))
@@ -21,12 +21,14 @@ def get_runs(request, experiment="xebra", limit=None):
             duration = (datetime.datetime.utcnow() - row['start']).total_seconds()
         doc = {
                 'run_id' : '%i' % row['run_id'],
-                'run_id_abs' : '%i' % row['run_id_unsrt'],
+                'tags' : row['tags'],
                 'mode' : row['mode'],
                 'start' : row['start'].strftime('%Y-%m-%d %H:%M'),
                 'end' : end,
                 'duration' : '%i' % duration,
                 'user' : row['user'],
+                'meshes' : ('%d/%d' % (doc['cathode_mean'], doc['anode_mean'])
+                    if 'anode_mean' in doc else '-/-')
                 'comment' : row['comment'] if 'comment' in row else '',
         }
         runs.append(doc)
@@ -57,6 +59,12 @@ def get_status(request):
     status_doc = base.db['system_control'].find_one({'subsystem' : 'daqspatcher'})
     ret['spatchstatus'] = status_doc['status']
     ret['spatchmsg'] = status_doc['msg'] if status_doc['msg'] else ''
+    if ret['daqstatus'] == 'running':
+        run_duration = status_doc['duration']
+        run_start = base.db['runs'].find_one({},{'start' : 1}.sort([('_id', -1)])['start']
+        ret['runprogress'] = '%d' % ((datetime.datetime.utcnow()-run_start).total_seconds()/run_duration*100)
+    else:
+        ret['runprogress'] = '0'
 
     status_doc = base.db['system_control'].find_one({'subsystem' : 'straxinator'})
     ret['straxstatus'] = status_doc['status']
@@ -65,6 +73,10 @@ def get_status(request):
     status_doc = base.db['system_control'].find_one({'subsystem' : 'pulser'})
     ret['ledstatus'] = status_doc['status']
     #ret['ledmsg'] = status_doc['msg'] if status_doc['msg'] else ''
+
+    if ret['daqstatus'] == 'running':  # add progress bar
+        rundoc = ''
+        ret['runprogress'] = '%i'
     return JsonResponse(ret)
 
 def get_cfg_doc(request, name):
@@ -72,4 +84,19 @@ def get_cfg_doc(request, name):
     if doc is None:
         return JsonResponse({'name' : '', 'description' : '', 'user' : '', 'detector' : ''})
     del doc['_id']
+    return JsonResponse(doc)
+
+def get_run_detail(request, experiment, runid):
+    runid = f'{int(runid):05d}'
+    doc = base.db['runs'].find_one({'experiment' : experiment, 'run_id' : runid})
+    if doc is None:
+        return JsonResponse({})
+    del doc['_id']
+    if 'end' in doc:
+        doc['duration'] = (doc['end']-doc['start']).total_seconds()
+        doc['end'] = doc['end'].isoformat(sep=' ')
+    else:
+        doc['duration'] = 'Active'
+        doc['end'] = 'None'
+    doc['start'] = doc['start'].isoformat(sep=' ')
     return JsonResponse(doc)

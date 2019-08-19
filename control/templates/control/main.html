@@ -38,6 +38,9 @@
                 </tr>
             </tbody>
         </table>
+        <div id="progress_bar_div">
+            Run progress:<progress value="0" max="100"></progress>
+        </div>
         <br>
         <h2 class="tabhead">Control</h2>
         <table class="tablediv">
@@ -47,30 +50,23 @@
                         {% csrf_token %}
                         <input type="range" min="1" max="15" value="3" id="durationslide" name="duration">
                         <label for="durationslide" id="durationlabel">Duration</label>
+                        <select name="mode">
+                        {% for mode in modes %}
+                            <option value="{{ mode }}">{{ mode }}</option>
+                        {% endfor %}
+                        </select>
                         <input type="text" name="comment" placeholder="Run comment">
+                        Config override:
+                        <textarea name="config_override" rows="4" cols="32"
+                            placeholder="{&quot;some_field&quot; : some_value}"></textarea>
                         <button type="submit" value="Start" id="startbutton">Start</button>
+                        <button type="reset" value="Reset" id="resetbutton">Reset</button>
                     </form>
                 </td>
                 <td>
                     <form action="{% url 'stop' %}" method="post">
                         {% csrf_token %}
                         <button type="submit" value="Stop" id="stopbutton">Stop</button>
-                    </form>
-                </td>
-            </tr><tr>
-                <td>
-                    <form action="{% url 'arm' %}" method="post">
-                        {% csrf_token %}
-                        <select name="mode">
-                        {% for mode in modes %}
-                            <option value="{{ mode }}">{{ mode }}</option>
-                        {% endfor %}
-                        </select>
-                        Config override:
-                        <textarea name="config_override" rows="4" cols="32"
-                            placeholder="{&quot;some_field&quot; : some_value}"></textarea>
-                        <button type="submit" value="Arm" id="armbutton">Arm</button>
-                        <button type="reset" value="Reset" id="armresetbtn">Reset</button>
                     </form>
                 </td>
                 <td>

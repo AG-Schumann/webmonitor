@@ -1,16 +1,40 @@
 from django.shortcuts import redirect
+from django.http import HttpResponseNotModified
 from django.views.decorators.http import require_POST
 
 import datetime
 import json
 from . import base
+import time
 
 
 @require_POST
 def start(request):
     if not base.is_schumann_subnet(request.META):
         return redirect('main', msgcode='err_not_auth')
-    if base.CurrentStatus() != 'armed':
+    if base.CurrentStatus() != 'idle':
+        return redirect('main', msgcode='err_not_idle')
+    params = request.POST
+    kwargs = {'mode' : params['mode'],
+            'goal' : 'arm',
+            }
+    if 'config_override' in params and len(params['config_override']) > 1:
+        try:
+            kwargs['config_override'] = json.loads(params['config_override'])
+        except:
+            return redirect('main', msgcode='err_invalid_json')
+    else:
+        kwargs['config_override'] = {}
+    base.UpdateDaqspatcher(request, **kwargs)
+    time.sleep(3)  # one sec for dispatcher, one for daq, one extra
+    for _ in range(10):
+        status = base.CurrentStatus()
+        if status not in ['arming','armed']:
+            return redirect('main', msgcode='err_not_armed')
+        if status == 'armed':
+            break
+        time.sleep(1)
+    else:
         return redirect('main', msgcode='err_not_armed')
     try:
         duration = int(request.POST['duration'])*60
@@ -28,26 +52,6 @@ def stop(request):
         return redirect('main', msgcode='err_not_running')
     base.UpdateDaqspatcher(request, goal='stop')
     return redirect('main', msgcode='msg_stop')
-
-@require_POST
-def arm(request):
-    if not base.is_schumann_subnet(request.META):
-        return redirect('main', msgcode='err_not_auth')
-    if base.CurrentStatus() != 'idle':
-        return redirect('main', msgcode='err_not_idle')
-    params = request.POST
-    kwargs = {'mode' : params['mode'],
-            'goal' : 'arm',
-            }
-    if 'config_override' in params and len(params['config_override']) > 1:
-        try:
-            kwargs['config_override'] = json.loads(params['config_override'])
-        except:
-            return redirect('main', msgcode='err_invalid_json')
-    else:
-        kwargs['config_override'] = {}
-    base.UpdateDaqspatcher(request, **kwargs)
-    return redirect('main', msgcode='msg_arm')
 
 @require_POST
 def led(request):
@@ -82,4 +86,29 @@ def cfg(request, act='update'):
     base.db['options'].replace_one({'name' : vals['name']}, doc, upsert=True)
     msgcode = 'msg_new_cfg' if act=='new' else 'msg_cfg_update'
     return redirect('config', msgcode=msgcode)
+
+@require_POST
+def update_run(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('main', msgcode='err_not_auth')
+    vals = request.POST
+    try:
+        experiment, run_id = vals['exp_name'].split('__')
+    except ValueError:
+        return redirect('main')
+    query = {'experiment' : experiment, 'run_id' : '%05d' % int(run_id)}
+    existing_tags = base.db['runs'].find_one(query, projection={'tags' : 1})['tags']
+
+    updates = {}
+    if 'newtag' in vals and len(vals['newtag']) > 1 and vals['newtag'] not in existing_tags:
+        updates['$push'] = {'tags' : vals['newtag']}
+    tags_to_remove = []
+    for key in vals:
+        if key.startswith('rm_'):
+            tags_to_remove.append(vals[key])
+    if len(tags_to_remove) > 0:
+        updates['$pull'] = {'tags' : {'$in' : tags_to_remove}}
+    if updates:
+        base.db['runs'].update_one(query, updates)
+    return HttpResponseNotModified()
 
