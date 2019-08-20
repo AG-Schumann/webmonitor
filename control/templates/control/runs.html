@@ -2,13 +2,13 @@
 <!-- runs.html -->
 
 {% block headers %}
-    <script src="{% static 'js/scripts_daq_runs.js' %}"></script>
+    <script src="/static/js/scripts_daq_runs.js"></script>
 {% endblock %}
 
 {% block subtitle %}Runs database{% endblock %}
 
 {% block content %}
-<div class="runstablediv">
+<div class="runstablediv" id="tablediv">
     <h4>Select experiment:</h4>
     <select id="exp_name">
         {% for experiment in experiments %}
@@ -20,7 +20,7 @@
     <table class="runstable">
         <thead>
             <tr class="tabheader">
-                <th colspan="8" style="background-color:#444466">Do you know <a href="https://xkcd.com/208">regular expressions</a>?</th>
+                <th colspan="9" style="background-color:#444466">Do you know <a href="https://xkcd.com/208">regular expressions</a>?</th>
             </tr><tr class="tabheader">
                 <th>
                     <button type="submit" id="straxbutton" onclick="GenerateStraxList()">Generate strax datalist</button>
@@ -62,8 +62,9 @@
     </table>
 </div> <!-- runstablediv -->
 
-<div class="rundetail">
-    <button type="submit" value="Hide" onclick="HideTabs()">Hide</button>
+<div class="modal" id="rundetail">
+    <div class="modal_content">
+    <button value="Hide" onclick="HideTabs()">Hide</button>
     <ul>
         <li id="d_run_id">Run id:</li>
         <li id="d_run_mode">Run mode:</li>
@@ -71,14 +72,15 @@
         <li id="d_run_end">Run end time:</li>
         <li id="d_run_dur">Run duration:</li>
         <li id="d_run_user">Run started by:</li>
-        <li id="d_run_comment">Comments:</li>
-        <li>Stored data:</li>
-            <ul id="d_run_data"></ul>
     </ul><br>
-    <form target="/control/runs/update_runs/" method="POST">
+    <form action="/control/runs/update_run/" method="POST">
+        {% csrf_token %}
         <fieldset>
             <legend>Tags</legend>
-            <input type="text" disabled hidden id="exp_name">
+            <input type="text" hidden id="exp_name_h" name="exp_name">
+            Comment: <input type="text" id="d_run_comment" name="run_comment"
+                                                           placeholder="Comment"><br>
+            <span>Remove tag?</span>
             <ul id="d_run_tags"></ul>
             <button type="submit" value="Submit changes">Submit changes</button>
             <button type="reset" value="Reset">Reset</button>
@@ -87,12 +89,12 @@
     <u>Run Config:</u>
     <p id="d_run_config" style="font-family: monospace;"></p>
     </ul>
+    </div> <!-- rundetail content -->
 </div> <!-- rundetail -->
 
-<div class="tagdetail">
-    <button type="submit" value="Hide" onclick="HideTabs()">Hide</button>
-    <form>
-        {% csrf_token %}
+<div class="modal" id="tagdetail">
+    <div class="modal_content">
+    <button value="Hide" onclick="HideTabs()">Hide</button>
         <fieldset>
             <legend>Tags to include</legend>
             <ul id="includetags">
@@ -110,9 +112,8 @@
                 <li><input type="text" pattern="[a-zA-Z0-9_\\-]*"></li>
             </ul>
         </fieldset>
-        <button type="submit" value="Submit" onclick="FilterRunsByTags()">Submit</button>
-        <button type="reset" value="Reset">Reset</button>
-    </form>
+        <button onclick="FilterRunsByTags()">Submit</button>
+    </div> <!-- tagdetail content -->
 </div> <!-- tagdetail -->
 {% endblock %}
 

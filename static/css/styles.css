@@ -262,20 +262,13 @@ th {
     color: white;
 }
 
-.td_p {
-    background-image: linear-gradient(to right, rgba(0, 150, 0, 1) 0%, rgba(0, 175, 0, 1) 17%, rgba(0, 190, 0, 1) 33%, rgba(82, 210, 81, 1) 67%, rgba(131, 230, 131, 1) 83%, rgba(180, 211, 180, 1) 100%);
-    background-repeat: no-repeat;
-}
-
-#progress_bar_bkg {
+.progress_bar_div {
     width: 80%;
     background-color: inherit;
 }
 
-#progress_bar_front {
-    width: 1%;
-    height: 30px;
-    background-color: green;
+progress {
+    width: 95%;
 }
 
 .navbar {
@@ -337,18 +330,18 @@ th {
     display: block;
 }
 
-#runstable {
+.runstable {
     border-collapse: collapse;
     width: 100%;
     border: 1px solid #ddd;
 }
 
-#runstable th, #runstable td {
+.runstable th, .runstable td {
     text-align: left;
     padding: 12px;
 }
 
-#runstable tr {
+.runstable tr {
     border-bottom: 1px solid #ddd;
 }
 
@@ -356,7 +349,7 @@ th {
     color: red;
 }
 
-.shift_modal {
+.modal {
     display: none;
     position: fixed;
     z-index: 1;
@@ -369,7 +362,7 @@ th {
     background-color: rgba(0,0,0,0.4);
 }
 
-.shift_modal_content {
+.modal_content {
     background-color: #fefefe;
     margin: 15% auto;
     padding: 20px;
@@ -377,17 +370,7 @@ th {
     width: 80%;
 }
 
-#rundetail {
-    display: none;
-    width: 30%;
-}
-
-#tagdetail {
-    display: none;
-    width: 30%;
-}
-
-#icon {
-    width: 50px;
-    height: 50px;
+.icon {
+    width: 30px;
+    height: 30px;
 }
