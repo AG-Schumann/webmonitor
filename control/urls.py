@@ -29,7 +29,7 @@ urlpatterns = [
         re_path('^cfg/(?:(?P<act>[a-z]+)/)$',
             views_post.cfg, name="cfg"),
 
-        re_path('^get_cfg_doc/(?P<name>[a-zA-Z_]+)/$',
+        re_path('^get_cfg_doc/(?P<name>[a-zA-Z0-9_\\-]+)/$',
             views_get.get_cfg_doc, name="get_cfg_doc"),
 
         re_path("^runs/get_run_detail/(?P<experiment>[^/]+)/(?P<runid>[1-9]*[0-9])/$",

@@ -90,8 +90,8 @@ def cfg(request, act='update'):
 @require_POST
 def update_run(request):
     print('Updating run')
-    #if not base.is_schumann_subnet(request.META):
-    #    return redirect('main', msgcode='err_not_auth')
+    if not base.is_schumann_subnet(request.META):
+        return redirect('main', msgcode='err_not_auth')
     vals = request.POST
     try:
         experiment, run_id = vals['exp_name'].split('__')
