@@ -89,26 +89,28 @@ def cfg(request, act='update'):
 
 @require_POST
 def update_run(request):
+    print('Updating run')
     if not base.is_schumann_subnet(request.META):
         return redirect('main', msgcode='err_not_auth')
     vals = request.POST
     try:
         experiment, run_id = vals['exp_name'].split('__')
     except ValueError:
-        return redirect('main')
-    query = {'experiment' : experiment, 'run_id' : '%05d' % int(run_id)}
-    existing_tags = base.db['runs'].find_one(query, projection={'tags' : 1})['tags']
+        return redirect('runs')
+    query = {'experiment' : experiment, 'run_id' : int(run_id)}
+    doc = base.db['runs'].find_one(query, projection={'tags' : 1, 'comment' : 1})
+    existing_tags = doc['tags']
+    existing_comment = doc['comment']
 
-    updates = {}
     if 'newtag' in vals and len(vals['newtag']) > 1 and vals['newtag'] not in existing_tags:
-        updates['$push'] = {'tags' : vals['newtag']}
+        base.db['runs'].update_one(query, {'$push' : {'tags' : vals['newtag']}})
     tags_to_remove = []
     for key in vals:
         if key.startswith('rm_'):
-            tags_to_remove.append(vals[key])
+            tags_to_remove.append(key.split('rm_')[1])
     if len(tags_to_remove) > 0:
-        updates['$pull'] = {'tags' : {'$in' : tags_to_remove}}
-    if updates:
-        base.db['runs'].update_one(query, updates)
-    return HttpResponseNotModified()
+        base.db['runs'].update_one(query, {'$pull' : {'tags' : {'$in' : tags_to_remove}}})
+    if existing_comment != vals['run_comment']:
+        base.db['runs'].update_one(query, {'$set' : {'comment' : vals['run_comment']}})
+    return redirect('/control/runs')
 

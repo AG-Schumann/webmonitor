@@ -54,8 +54,8 @@
     </form>
 </div>
 
-<div id="shift_modal" class="shift_modal">
-    <div class="shift_modal_content">
+<div id="shift_modal" class="modal">
+    <div class="modal_content">
         <form action="{% url 'update_shift' %}" method="post">
             {% csrf_token %}
             <input type="text" id="shift_key" name="shift_key" hidden>
@@ -94,7 +94,7 @@
 {% block javascript %}
     <script>
         window.onclick = function(event) {
-            if (event.target == $("shift_modal")) {
+            if (event.target == $("#shift_modal")) {
                 $("shift_modal").css("display","none");
             }
         }

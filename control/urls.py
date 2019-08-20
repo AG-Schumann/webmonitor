@@ -4,7 +4,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from . import views_render, views_post, views_get
 
 urlpatterns = [
-        re_path(r'^runs/(?:(?P<msgcode>[^/]+)/)?$',
+        re_path(r'^runs/(?:(?P<msgcode>(?:err|msg)_[a-z]+)/)?$',
             views_render.runs, name='runs'),
 
         re_path(r'^config/(?:(?P<msgcode>[^/]+)/)?$',
@@ -29,11 +29,13 @@ urlpatterns = [
         re_path('^cfg/(?:(?P<act>[a-z]+)/)$',
             views_post.cfg, name="cfg"),
 
-        re_path('^get_cfg_doc/(?P<name>[a-zA-Z_]+)/$',
+        re_path('^get_cfg_doc/(?P<name>[a-zA-Z0-9_\\-]+)/$',
             views_get.get_cfg_doc, name="get_cfg_doc"),
 
-        re_path("^runs/get_run_detail/(?P<experiment>[^/])/(?P<runid>[1-9]*[0-9])/$",
+        re_path("^runs/get_run_detail/(?P<experiment>[^/]+)/(?P<runid>[1-9]*[0-9])/$",
             views_get.get_run_detail, name="get_run_detail"),
+
+        path("runs/update_run/", views_post.update_run, name="update_run"),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

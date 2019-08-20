@@ -27,8 +27,8 @@ def get_runs(request, experiment="xebra", limit=None):
                 'end' : end,
                 'duration' : '%i' % duration,
                 'user' : row['user'],
-                'meshes' : ('%d/%d' % (doc['cathode_mean'], doc['anode_mean'])
-                    if 'anode_mean' in doc else '-/-')
+                'meshes' : ('%d/%d' % (row['cathode_mean'], row['anode_mean'])
+                    if 'anode_mean' in row else '-/-'),
                 'comment' : row['comment'] if 'comment' in row else '',
         }
         runs.append(doc)
@@ -61,8 +61,9 @@ def get_status(request):
     ret['spatchmsg'] = status_doc['msg'] if status_doc['msg'] else ''
     if ret['daqstatus'] == 'running':
         run_duration = status_doc['duration']
-        run_start = base.db['runs'].find_one({},{'start' : 1}.sort([('_id', -1)])['start']
-        ret['runprogress'] = '%d' % ((datetime.datetime.utcnow()-run_start).total_seconds()/run_duration*100)
+        run_start = base.db['runs'].find_one({},{'start': 1}).sort([('_id', -1)])['start']
+        runtime = (datetime.datetime.utcnow() - run_start).total_seconds()
+        ret['runprogress'] = '%d' % (runtime/run_duration*100)
     else:
         ret['runprogress'] = '0'
 
@@ -87,8 +88,7 @@ def get_cfg_doc(request, name):
     return JsonResponse(doc)
 
 def get_run_detail(request, experiment, runid):
-    runid = f'{int(runid):05d}'
-    doc = base.db['runs'].find_one({'experiment' : experiment, 'run_id' : runid})
+    doc = base.db['runs'].find_one({'experiment' : experiment, 'run_id' : int(runid)})
     if doc is None:
         return JsonResponse({})
     del doc['_id']
