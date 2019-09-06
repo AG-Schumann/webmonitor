@@ -3,7 +3,6 @@ from django.views.decorators.http import require_GET
 
 from . import base
 import datetime
-from urllib.parse import unquote
 
 
 @require_GET
@@ -190,6 +189,7 @@ def get_shifts(request, start, end):
 
     return JsonResponse({'events' : shifts})
 
+@require_GET
 def get_shift_detail(request, date):
     shift = base.db.readFromDatabase('settings','shifts',
             {'key' : date}, onlyone=True)
@@ -201,3 +201,20 @@ def get_shift_detail(request, date):
         'start' : shift['start'].isoformat(sep=' ')[:16],
         'end' : shift['end'].isoformat(sep=' ')[:16],
         })
+
+@require_GET
+def get_pmts(request, speed='slow'):
+    def fields(ch):
+        f = [f'stat_{ch}', f'vmon_{ch}', f'imon_{ch}', f'setp_{ch}', f'tript_{ch}',
+                f'tripi_{ch}', f'rup_{ch}', f'rdn_{ch}', f'pon_{ch}', f'pdn_{ch}',
+                f'pw_{ch}']
+        if speed=='fast':
+            return f[:3]
+        return f
+    ret = {}
+    for ch in range(12):
+        for f in fields(ch):
+            ret[f] = base.db.readFromDatabase('data', 'caen_sy5527',
+                {f : {'$exists' : 1}}, projection=[f], sort=[('_id', -1)],
+                onlyone=True)[f]
+    return JsonResponse(ret)

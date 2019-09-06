@@ -79,4 +79,12 @@ urlpatterns = [
                 views_post.add_new_contact,
                 name='add_new_contact'),
 
+        re_path(r'^get_pmt_status/(?P<speed>fast|slow)/$',
+                views_get.get_pmt_status,
+                name='get_pmt_status'),
+
+        re_path(r'^set_pmt_status/$',
+                views_post.set_pmt_status,
+                name='set_pmt_status'),
+
         ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

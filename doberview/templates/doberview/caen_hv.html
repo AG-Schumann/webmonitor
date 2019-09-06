@@ -1,0 +1,86 @@
+{% extends "doberview/base.html" %}
+<!-- caen_hv.html -->
+
+{% block subtitle %}HV crate control{% endblock %}
+
+{% block content %}
+
+<div>
+    <table>
+        <thead>
+            <tr>
+                <th colspan="12">PMT control</th>
+            </tr><tr>
+                <th>Channel</th>
+                <th>Status</th>
+                <th>Voltage (V)</th>
+                <th>Setpoint (V)</th>
+                <th>Control</th>
+                <th>Current (&#956;A)</th>
+                <th>Trip current (&#956;A)</th>
+                <th>Trip time (s)</th>
+                <th>Ramp up rate (V/s)</th>
+                <th>Ramp down rate (V/s)</th>
+                <th>Channel enabled?</th>
+                <th>Power down options</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ch in range(num_chan) %}
+            <tr>
+                <td class="tr_ch">{{ ch }}</td>
+                <td id="ch{{ ch }}_stat" class="tr_stat">
+                </td>
+                <td id="ch{{ ch }}_vmon" class="tr_vmon">
+                </td>
+                <td id="ch{{ ch }}_setp" class="tr_setp">
+                    <input type="number" name="ch{{ ch }}_setp" max="3500" min="0">
+                </td>
+                <td id="ch{{ ch }}_ctrl" class="tr_ctrl">
+                    <select name="ch{{ ch }}_pw">
+                        <option value="On">On</option>
+                        <option value="Off">Off</option>
+                    </select>
+                </td>
+                <td id="ch{{ ch }}_imon" class="tr_imon">
+                </td>
+                <td id="ch{{ ch }}_tripi" class="tr_tripi">
+                    <input type="number" name="ch{{ ch }}_tripi" max="3000" min="0">
+                </td>
+                <td id="ch{{ ch }}_tript" class="tr_tript">
+                    <input type="number" name="ch{{ ch }}_tript" max="1000" min="0">
+                </td>
+                <td id="ch{{ ch }}_rup" class="tr_rup">
+                    <input type="number" name="ch{{ ch }}_rup" max="500" min="1">
+                </td>
+                <td id="ch{{ ch }}_rdn" class="tr_rdn">
+                    <input type="number" name="ch{{ ch }}_rdn" max="500" min="1">
+                </td>
+                <td id="ch{{ ch }}_pon" class="tr_pon">
+                    <select name="ch{{ ch }}_pon">
+                        <option value="En">En</option>
+                        <option value="Dis">Dis</option>
+                    </select>
+                </td>
+                <td id="ch{{ ch }}_pdn" class="tr_pdn">
+                    <select name="ch{{ ch }}_pdn">
+                        <option value="Ramp">Ramp</option>
+                        <option value="Kill">Kill</option>
+                    </select>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot></tfoot>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        window.setInterval(UpdatePMTTable("fast"), 1000);
+        window.setInterval(UpdatePMTTable("slow"), 60000);
+        window.onLoad = UpdatePMTTable("slow");
+    </script>
+{% endblock %}
