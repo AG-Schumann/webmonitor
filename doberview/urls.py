@@ -39,9 +39,9 @@ urlpatterns = [
                 views_get.get_shift_detail,
                 name='get_shift_detail'),
 
-        path('trend',
-             views_render.trend,
-             name='trend'),
+        path('caen_hv',
+             views_render.pmts,
+             name='caen_hv'),
 
         re_path(r'^startstop/$',
                 views_post.startstop,
@@ -79,12 +79,12 @@ urlpatterns = [
                 views_post.add_new_contact,
                 name='add_new_contact'),
 
-        re_path(r'^get_pmt_status/(?P<speed>fast|slow)/$',
-                views_get.get_pmt_status,
-                name='get_pmt_status'),
+        re_path(r'^get_pmts/(?P<speed>fast|slow)/$',
+                views_get.get_pmts,
+                name='get_pmts'),
 
-        re_path(r'^set_pmt_status/$',
-                views_post.set_pmt_status,
-                name='set_pmt_status'),
+        re_path(r'^update_pmts/$',
+                views_post.update_pmts,
+                name='update_pmts'),
 
         ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

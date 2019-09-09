@@ -10,10 +10,9 @@ def index(request):
     context = base.index_context()
     return render(request, 'doberview/index.html', context)
 
-def trend(request):
-    sensor_names = base.db.Distinct('settings','sensors','name')
+def pmts(request):
     context = base.trend_context()
-    return render(request, 'doberview/trend.html', context)
+    return render(request, 'doberview/caen_hv.html', context)
 
 def contacts(request):
     context = base.contact_context()

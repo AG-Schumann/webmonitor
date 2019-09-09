@@ -3,7 +3,7 @@ from Doberman import Database
 
 with open('/home/darryl/Work/doberman/connection_uri','r') as f:
     client = MongoClient(f.read().strip())
-    db = Database(client, appname='webmonitor')
+    db = Database(client)
     db.experiment_name = 'xebra'
 
 _error_codes = {

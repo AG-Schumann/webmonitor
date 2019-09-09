@@ -159,3 +159,39 @@ def add_new_contact(request):
     base.db.insertIntoDatabase('settings','contacts',contact)
     base.db.LogUpdate(field='contacts', new=info['firstname'] + info['lastname'][0], **user)
     return redirect('contacts')
+
+@require_POST
+def scram(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('index')
+    for ch in range(12):
+        base.dispatcher.ProcessCommand(f'caen_sy5527 set ch{ch} pdn 1')
+        base.dispatcher.ProcessCommand(f'caen_sy5527 set ch{ch} pw 0')
+    return HttpResponseNotModified()
+
+@require_POST
+def update_pmts(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('index')
+    new_values = request.POST
+    user = base.client(request.META)
+    is_digital = {'setp' : False, 'tripi' : False, 'tript' : False, 'rup' : False,
+            'rdn' : False, 'pon' : True, 'pdn' : True, 'pw' : True}
+    digital_map = {'On' : 1, 'Off' : 0, 'En' : 1, 'Dis' : 0, 'Ramp' : 1, 'Kill' : 0}
+    for ch in range(12):
+        for quant in ['setp', 'tripi', 'tript', 'rup', 'rdn', 'pon', 'pdn', 'pw']:
+            key = f'{quant}_{ch}'
+            newval = request.POST[f'ch{ch}_{quant}']
+            last_val = base.db.readFromDatabase('data', 'caen_sy5527',
+                    {key : {'$exists' : 1}}, onlyone=True, sort=[('_id', -1)])[key]
+            if is_digital[quant] and digital_map[newval] != last_val:
+                doc = {'command' : f'set ch{ch} sl3 {quant} {digital_map[newval]}',
+                        'name' : 'caen_sy5527'}
+                doc.update(user)
+                base.db.LogCommand(doc)
+            elif new_val != last_val:
+                doc = {'command' : f'set ch{ch} sl3 {quant} {newval}',
+                        'name' : 'caen_sy5527'}
+                doc.update(user)
+                base.db.LogCommand(doc)
+    return HttpResponseNotModified()
