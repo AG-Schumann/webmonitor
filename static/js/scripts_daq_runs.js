@@ -40,9 +40,9 @@ function FilterRunsTable(column) {
         var td = tr.eq(i).children("td").eq(column);
         if (td) {
             if (regex.test(td.html())) {
-                tr[i].css("display", "");
+                tr[i].style.display =  "";
             } else {
-                tr[i].css("display", "none");
+                tr[i].style.display = "none";
             }
         } else {
             console.log('No td');

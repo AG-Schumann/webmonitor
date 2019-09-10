@@ -1,10 +1,11 @@
 from pymongo import MongoClient
-from Doberman import Database
+from Doberman import DobermanDB
 
-with open('/home/darryl/Work/doberman/connection_uri','r') as f:
-    client = MongoClient(f.read().strip())
-    db = Database(client, appname='webmonitor')
-    db.experiment_name = 'xebra'
+#with open('/home/darryl/Work/doberman/connection_uri','r') as f:
+#    client = MongoClient(f.read().strip())
+#    db = Database(client, appname='webmonitor')
+#    db.experiment_name = 'xebra'
+db = DobermanDB.DobermanDB(appname='webmonitor')
 
 _error_codes = {
         '00' : 'No error',
@@ -26,6 +27,11 @@ def base_context(**kwargs):
     context.update(kwargs)
     sensor_names = sorted(db.Distinct('settings','sensors','name'))
     context['sensors'] = sensor_names
+    for to_remove in db.readFromDatabase('settings','webhooks',{},onlyone=True)['sensors_to_hide']:
+        try:
+            context['sensors'].remove(to_remove)
+        except:
+            pass
 
     return context
 
