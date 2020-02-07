@@ -1,19 +1,18 @@
 from django.http import JsonResponse, HttpResponseNotModified
 from django.views.decorators.http import require_GET
-
+from influxdb import InfluxDBClient
 from . import base
 import datetime
-
+from datetime import datetime as dt
 
 @require_GET
 def getalarms(request):
     docs = []
-    sort = [('when', -1)]
+    sort = [('_id', -1)]
     try:
         for row in base.db.readFromDatabase('logging', 'alarm_history', sort=sort, limit=10):
             docs.append({
-                'when' : row['when'].strftime("%Y-%m-%d %H:%M:%S"),
-                'name' : row['name'],
+                'when' : dt.fromtimestamp(int(str(row['_id'])[:8], 16)).strftime("%Y-%m-%d %H:%M:%S"),
                 'message' : row['msg'].replace("<","").replace(">",""),
                 })
         return JsonResponse({'docs' : docs})
@@ -31,11 +30,11 @@ def getlogs(request):
             40 : 'error',
             50 : 'critical',
         }
-    sort = [('when', -1)]
+    sort = [('_id', -1)]
     try:
         for row in base.db.readFromDatabase('logging', 'logs', sort=sort, limit=10):
             docs.append({
-                'when' : row['when'].strftime("%Y-%m-%d %H:%M:%S"),
+                'when' : dt.fromtimestamp(int(str(row['_id'])[:8], 16)).strftime("%Y-%m-%d %H:%M:%S"),
                 'level' : levels[int(row['level'])],
                 'name' : row['name'],
                 'message' : row['msg'].replace("<","").replace(">",""),
@@ -50,7 +49,7 @@ def get_sensor_details(request, sensor_name=""):
     ret = {'html' : {}, 'value' : {}}
     if sensor_name not in base.db.Distinct('settings','sensors','name'):
         return JsonResponse(ret)
-    sensor_doc = base.db.GetSensorSettings(sensor_name)
+    sensor_doc = base.db.GetSensorSetting(sensor_name)
     ret['value']['s_name_startstop'] = sensor_name
     ret['value']['s_name_rd'] = sensor_name
     ret['value']['s_name_addr'] = sensor_name
@@ -59,19 +58,6 @@ def get_sensor_details(request, sensor_name=""):
     ret['html']['reading_dropdown'] = '<option value="" selected>Select reading</option>'
     for reading_name in sensor_doc['readings']:
         ret['html']['reading_dropdown'] += f'<option value="{reading_name}">{reading_name}</option>'
-
-    if sensor_doc['status'] == 'online':
-        ret['value']['startbtn'] = 'Stop'
-        ret['html']['startbtn'] = 'Stop'
-        ret['html']['status_legend'] = 'Hardware connection online'
-    elif sensor_doc['status'] == 'offline':
-        ret['value']['startbtn'] = 'Start'
-        ret['html']['startbtn'] = 'Start'
-        ret['html']['status_legend'] = 'Hardware connection offline'
-    else:
-        ret['value']['startbtn'] = ''
-        ret['html']['startbtn'] = ''
-        ret['html']['status_legend'] = 'Hardware connection unknown'
 
     if 'address' in sensor_doc:
         s = ''
@@ -111,24 +97,46 @@ def get_reading_detail(request, sensor_name="", reading_name=""):
     if sensor_name not in base.db.Distinct('settings','sensors','name'):
         return HttpResponseNotModified()
     readings = base.db.GetSensorSetting(sensor_name, 'readings')
+    if type(readings) is dict:
+        readings = list(readings.keys())
     if reading_name not in readings:
         return HttpResponseNotModified()
-    reading = base.db.GetReading(sensor_name, reading_name)
+    reading = base.db.GetReadingSetting(sensor_name, reading_name)
     ret['html']['rd_legend'] = "%s" % (reading['description'])
     ret['value']['rd_name'] = reading['name']
-    ret['value']['rd_alrec'] = str(int(reading['recurrence']))
     ret['value']['rd_roi'] = str(int(reading['readout_interval']))
-
-    ret['html']['rd_alarm_list'] = ''
-    for i,(lo,hi) in enumerate(reading['alarms']):
-        ret['html']['rd_alarm_list'] += f'<li>Level {i}: Low:<input type="number" name="al_{i}_0" value="{lo}" step="any"> High:<input type="number" name="al_{i}_1" value="{hi}" step="any"></li>'
+    alarms = reading['alarms']
+    ret['html']['alarmsettings'] = ''
+    for alarm in alarms:
+        al_type = alarm["type"]
+        ret['html']['alarmsettings'] += f'<tr><td align="left" colspan="2"> {al_type}'
+        ret['html']['alarmsettings'] += f'<input type="text" id="type" value="{al_type}" hidden>'
+        for parameter in alarm.keys():
+            if parameter == 'type':
+                continue
+            ret['html']['alarmsettings'] += f'<tr><td align="left"> {parameter} </td>'
+            if parameter == 'levels':
+                ret['html']['alarmsettings'] += '<td>'
+                if isinstance(alarm['levels'][0], list):
+                    for i,(lo,hi) in enumerate(alarm['levels']):
+                        ret['html']['alarmsettings'] += f'<li>Level {i}: Low:<input type="number" name="{al_type}__al_{i}_0" value="{lo}" step="any"> High:<input type="number" name="{al_type}__al_{i}_1" value="{hi}" step="any"></li>'
+                else:
+                    for i,value in enumerate(alarm['levels']):
+                        ret['html']['alarmsettings'] += f'<li>Level {i}: <input type="number" name="{al_type}__al_{i}" value="{value}" step="any"></li>'
+                ret['html']['alarmsettings'] += '</td></tr>'
+            else:
+                ret['value'][parameter] = alarm[parameter]
+                ret['html']['alarmsettings'] += f'<td align="left"> <input type="number" min="0" max="1000" step="1" id="{parameter}" name="{al_type}__{parameter}"></tr>'
+        
     ret['html']['rd_cfg_list'] = ''
     for rm,cfg in reading['config'].items():
         ret['html']['rd_cfg_list'] += f'<li>{rm}: <input type="number" min="-1" step=1 max="{len(reading["alarms"])-1}" value="{int(cfg["level"])}" name="{rm}_level"></li>'
+    
     ret['html']['rd_runmode'] = ''
     for rm in ['default','testing','recovery']:
         selected = 'selected' if rm == reading['runmode'] else ''
         ret['html']['rd_runmode'] += f'<option value="{rm}" {selected}>{rm}</option>'
+        
     ret['html']['rd_status'] = ''
     for status in ['offline','online']:
         selected = 'selected' if status == reading['status'] else ''
@@ -137,37 +145,57 @@ def get_reading_detail(request, sensor_name="", reading_name=""):
     return JsonResponse(ret)
 
 @require_GET
-def getreadings(request, name):
-    if name not in base.db.Distinct('settings','sensors','name'):
-        ret = {'readings' : []}
-    else:
-        ret = {'readings' : base.db.Distinct('settings', 'sensors',
-            'readings.description', {'name' : name})}
+def get_host_detail(request, host_name=""):
+    ret = {'html' : {}, 'value' : {}}
+    if host_name not in base.db.Distinct('common','hosts','hostname'):
+        return HttpResponseNotModified()
+    doc = base.db.GetHostSetting(host_name)
+    ret['value']['sysmon_timer'] = doc['sysmon_timer']
+    default = doc['default']
+    ret['value']['host_name'] = host_name
+    ret['html']['host_legend'] = host_name
+    ret['html']['default_table'] = '<tr><td colspan="2">Default</td></tr>'
+    for sensor in default:
+        ret['html']['default_table'] += f'<tr><td>{sensor}</td>'
+        ret['html']['default_table'] += f'<td><input type="checkbox" name="checkbox_{sensor}" value="{sensor}" checked></td></tr>' 
+    unmonitored = base.db.GetUnmonitoredSensors()
+    ret['html']['unmonitored_table'] = '<tr><td colspan="2">Unmonitored</td></tr>'
+    for sensor in unmonitored:
+        ret['html']['unmonitored_table'] += f'<tr><td>{sensor}</td>'
+        ret['html']['unmonitored_table'] += f'<td><input type="checkbox" name="checkbox_{sensor}" value="{sensor}"></td></tr>'
     return JsonResponse(ret)
 
 @require_GET
 def getoverview(request):
     tabs = {}
     status_docs = base.db.GetCurrentStatus()
-
-    for sensor_name, status_doc in status_docs.items():
+    latest_values = get_latest_values()
+    for hostname, status_doc in status_docs.items():
         if status_doc['status'] == 'offline':
-            tabs['%s_head' % sensor_name] = sensor_name
-            tabs['%s_body' % sensor_name] = '<td colspan="5" style="color:#DD0000">Offline</td>'
+            tabs[f'{hostname}_head'] = f'{hostname}'
+            tabs[f'{hostname}_body'] = '<td colspan="4" style="color:#FF0000">Offline</td>'
         else:
-            tabs['%s_head' % sensor_name] = '%s: last heartbeat %i seconds ago' % (
-                    sensor_name, status_doc['last_heartbeat'])
-            key = '%s_body' % sensor_name
+            tabs[f'{hostname}_head'] = f'{hostname}: last heartbeat {status_doc["last_heartbeat"]:.1f} seconds ago'
+            key = f'{hostname}_body'
             tabs[key] = '<tr>'
-            for reading_name, reading_doc in status_doc['readings'].items():
-                tabs[key] += f'<td>{reading_doc["description"]}</td>'
-                if reading_doc['status'] == 'online':
-                    tabs[key] += f'<td>{reading_doc["last_time"]:.1f} sec</td>'
-                    tabs[key] += f'<td>{reading_doc["last_value"]:.3g}</td>'
-                    tabs[key] += f'<td>{reading_doc["runmode"][0]}</td>'
-                else:
-                    tabs[key] += '<td colspan="3" style="color:#FF7F00">Offline</td>'
-                tabs[key] += '</tr><tr>'
+            for sensor_name, sensor_doc in status_doc['sensors'].items():
+                tabs[key] += f'<td colspan="4" style="background-color:#7395AE; color:#ffffff">{sensor_name}: last heartbeat {sensor_doc["last_heartbeat"]:.1f} seconds ago</td>'
+                tabs[key] += '<tr><td style="background-color:#7395AE; color:#ffffff">Description</td>'
+                tabs[key] += '<td style="background-color:#7395AE; color:#ffffff">Value</td>'
+                tabs[key] += '<td style="background-color:#7395AE; color:#ffffff">Time</td>'
+                tabs[key] += '<td style="background-color:#7395AE; color:#ffffff">Runmode</td></tr>'
+                for reading_name, reading_doc in sensor_doc['readings'].items():
+                    tabs[key] += '<tr>'
+                    tabs[key] += f'<td> {reading_doc["description"]} </td>'
+                    if reading_doc["status"]== "online":
+                        tabs[key] += f'<td> {latest_values[reading_name]["value"]:.3g} </td>'
+                        tabs[key] += f'<td> {latest_values[reading_name]["time"]:.1f} sec</td>'
+                        tabs[key] += f'<td> {reading_doc["runmode"][0]} </td>'
+                    else:
+                        tabs[key] += '<td colspan=3 style="color:#FF0000">Offline</td>'
+                    tabs[key] += '</tr><tr>'
+                tabs[key] = tabs[key][:-4]
+                tabs[key] += '</tr><tr class="blank_row"><td colspan="4"></td></tr><tr>'
             tabs[key] = tabs[key][:-4]
     return JsonResponse(tabs)
 
@@ -218,3 +246,27 @@ def get_pmts(request, speed='slow'):
                 {f : {'$exists' : 1}}, projection=[f], sort=[('_id', -1)],
                 onlyone=True)[f]
     return JsonResponse(ret)
+
+def get_latest_values():
+    client = InfluxDBClient(host='192.168.131.2', port=8086, database='xebra')
+    latest_values = {}
+    measurements = [d['name'] for d in client.get_list_measurements()]
+    for measurement in measurements:
+        if measurement == "sysmon":
+            continue
+        key_set = client.query(f"SHOW FIELD KEYS FROM {measurement}")
+        keys = [d['fieldKey'] for d in list(key_set.get_points())]
+        for key in keys:
+            latest_values[key] = {}
+            result_set = client.query(f"SELECT time, {key} FROM {measurement} ORDER BY time DESC LIMIT 1")
+            result = dict(list(result_set.get_points())[0])
+            try:
+                latest_time = dt.strptime(result['time'][:-1],'%Y-%m-%dT%H:%M:%S.%f')
+                latest_values[key]['time'] = (dt.utcnow() - latest_time).total_seconds()
+            except ValueError:
+                latest_time = dt.strptime(result['time'][:-4],'%Y-%m-%dT%H:%M:%S.%f')
+                latest_values[key]['time'] = (dt.utcnow() - latest_time).total_seconds()
+            latest_values[key]['value'] = result[key]
+
+    return latest_values
+

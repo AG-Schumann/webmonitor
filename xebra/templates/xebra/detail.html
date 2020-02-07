@@ -1,4 +1,4 @@
-{% extends "doberview/base.html" %}
+{% extends "xebra/base.html" %}
 <!-- detail.html -->
 
 {% block subtitle %}Sensor detail{% endblock %}
@@ -19,17 +19,6 @@
         {% endfor %}
     </select>
 
-<div class="div_startstop">
-    <form action="{% url 'startstop' %}" method="post">
-        {% csrf_token %}
-        <fieldset>
-            <legend id="status_legend">Hardware connection unknown</legend>
-            <input type="text" name="sensor_name" id="s_name_startstop" hidden>
-            <button type="submit" id="startbtn" disabled></button>
-        </fieldset>
-    </form>
-</div>
-
 <div class="div_reading">
     <form action="{% url 'change_reading' %}" method="post">
         {% csrf_token %}
@@ -42,10 +31,9 @@
             <input type="text" id="rd_name" name="reading_name" hidden><br>
             Status: <select name="status" id="rd_status"></select><br>
             Runmode: <select name="runmode" id="rd_runmode"></select><br>
-            Alarm recurrence: <input type="number" min="1" max="99" step="1" id="rd_alrec" name="recurrence"><br>
-            Readout interval (seconds): <input type="number" min="5" max="300" step="1" id="rd_roi" name="readout_interval"><br>
-            Alarms:
-            <ul id="rd_alarm_list"></ul><br>
+            Readout interval (seconds): <input type="number" min="1" max="300" step="1" id="rd_roi" name="readout_interval"><br>
+            Alarms: 
+            <table  style="ruler:0" id="alarmsettings"></table>
             Config:
             <ul id="rd_cfg_list"></ul>
             <button type="submit" value="Submit" id="rdbtn" disabled>Submit</button>

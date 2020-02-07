@@ -1,4 +1,4 @@
-{% extends "doberview/base.html" %}
+{% extends "xebra/base.html" %}
 <!-- caen_hv.html -->
 
 {% block extrahead %}
@@ -13,8 +13,9 @@
     <table>
         <thead>
             <tr>
-                <th colspan="11">PMT control</th>
-                <th><form action="/doberview/scram">{% csrf_token %}<button type="submit" style="color:red">Scram</button></form></th>
+                <th><button type="submit" formid="pmt_form">Submit</button></th>
+                <th colspan="10">PMT control</th>
+                <th><form action="/doberview/scram">{% csrf_token %}<button type="submit" id="scrambtn">Scram</button></form></th>
             </tr><tr>
                 <th>Channel</th>
                 <th>Status</th>
@@ -24,16 +25,16 @@
                 <th>Current (&#956;A)</th>
                 <th>Trip current (&#956;A)</th>
                 <th>Trip time (s)</th>
-                <th>Ramp up rate (V/s)</th>
-                <th>Ramp down rate (V/s)</th>
-                <th>Channel enabled?</th>
-                <th>Power down options</th>
+                <th>Ramp up (V/s)</th>
+                <th>Ramp down (V/s)</th>
+                <th>Enabled?</th>
+                <th>Power down</th>
             </tr>
         </thead>
         <tbody>
             <form action="doberview/update_pmts">
                 {% csrf_token %}
-                {% for ch in range(num_chan) %}
+                {% for ch in pmt_crate_channels %}
                 <tr>
                     <td class="tr_ch">{{ ch }}</td>
                     <td id="ch{{ ch }}_stat" class="tr_stat">

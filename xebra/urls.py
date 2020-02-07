@@ -27,9 +27,9 @@ urlpatterns = [
                 views_render.detail,
                 name='detail'),
 
-        re_path(r'^getreadings/(?P<name>[^/]+)/$',
-                views_get.getreadings,
-                name='getreadings'),
+#        re_path(r'^getreadings/(?P<name>[^/]+)/$',
+#                views_get.getreadings,
+#                name='getreadings'),
 
         re_path(r'^get_shifts/(?P<start>20(?:19|2[0-9])-(?:0[1-9]|1[012])-(?:[012][0-9]|3[01]))/(?P<end>20(?:19|2[0-9])-(?:0[1-9]|1[012])-(?:[012][0-9]|3[01]))/$',
                 views_get.get_shifts,
@@ -58,18 +58,34 @@ urlpatterns = [
         re_path(r'get_sensor_details/(?P<sensor_name>[^/]+)/$',
                 views_get.get_sensor_details,
                 name='get_sensor_details'),
-
+        
+        re_path(r'get_host_detail/(?P<host_name>[^/]+)/$',
+                views_get.get_host_detail,
+                name='get_host_detail'),
+        
         re_path(r'get_reading_detail/(?P<sensor_name>[^/]+)/(?P<reading_name>[^/]+)/$',
                 views_get.get_reading_detail,
                 name='get_reading_detail'),
 
-        re_path(r'^change_reading/$',
+        re_path(r'change_reading/$',
                 views_post.change_reading,
                 name='change_reading'),
+
+        re_path(r'^change_default/$',
+                views_post.change_default,
+                name='change_default'),
 
         path('contacts',
                 views_render.contacts,
                 name='contacts'),
+
+        path('diagrams',
+                views_render.diagrams,
+                name='diagrams'),
+
+        path('hosts',
+                views_render.hosts,
+                name='hosts'),
 
         re_path(r'update_shift/$',
                 views_post.update_shift,

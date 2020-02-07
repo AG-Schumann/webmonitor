@@ -1,7 +1,7 @@
 function PopulateReadingDropdown(chartnum, sensor_name) {
     // called in trend
     console.log('Got ' + sensor_name);
-    $.getJSON('getreadings/'+sensor_name+'/', function(data) {
+    $.getJSON('/pancake/getreadings/'+sensor_name+'/', function(data) {
         var html = "<option value=''>select reading</option>";
         for (var i = 0; i < data['readings'].length; i += 1) {
             html += "<option value='"+i+"'>"+data['readings'][i]+"</option>";
@@ -25,7 +25,7 @@ function GetReadingDetails(sensor_name, reading_name) {
         $("#rd_roi").val("");
         return;
     }
-    $.getJSON('get_reading_detail/' + sensor_name + '/' + reading_name + '/', function(data) {
+    $.getJSON('/pancake/get_reading_detail/' + sensor_name + '/' + reading_name + '/', function(data) {
         if (data['html']) {
             for (var key in data['html']) {
                 $("#" + key).html(data['html'][key]);
@@ -54,14 +54,13 @@ function LoadSensorDetails(sensor_name) {
         $("#address_block").html("No address info!");
         return;
     }
-    $.getJSON('get_sensor_details/' + sensor_name + '/', function(data) {
+    $.getJSON('/pancake/get_sensor_details/' + sensor_name + '/', function(data) {
         if (data['html']) {
             for (var key in data['html']) {
                 $("#" + key).html(data['html'][key]);
             }
             for (var key in data['value']) {
                 $("#" + key).val(data['value'][key]);
-                console.log(key + ' ' + data['value'][key]);
             }
             $("#startbtn").attr("disabled", false);
             $("#rdbtn").attr("disabled", false);
@@ -71,9 +70,29 @@ function LoadSensorDetails(sensor_name) {
     });
 }
 
+function LoadHostSettings(host_name) {
+    //called in detail
+    console.log('Getting details for ' + host_name);
+    if (host_name.length == 0) {
+        $("#sysmon_timer").val("");
+        return;
+    }
+    $.getJSON('/pancake/get_host_detail/' + host_name + '/', function(data) {
+        for (var key in data['html']) {
+                $("#" + key).html(data['html'][key]);
+                console.log(key + ' ' + data['html'][key]);
+            }
+            for (var key in data['value']) {
+                $("#" + key).val(data['value'][key]);
+                console.log(key + ' ' + data['value'][key]);
+            }
+        $("#hostbtn").attr("disabled", false);
+        });
+}
+
 function UpdateOverview() {
     // called in index
-    $.getJSON('getoverview', function(data) {
+    $.getJSON('/pancake/getoverview', function(data) {
         for (var key in data) {
             $("#" + key).html(data[key]);
         }
@@ -82,7 +101,7 @@ function UpdateOverview() {
 
 function UpdateLogs() {
     // called in index
-    $.getJSON('getlogs', function(data) {
+    $.getJSON('/pancake/getlogs', function(data) {
         var html = '';
         var docs = data['docs'];
         for (var i = 0; i < docs.length; i += 1) {
@@ -97,12 +116,11 @@ function UpdateLogs() {
 
 function UpdateAlarms() {
     // called in index
-    $.getJSON('getalarms', function(data) {
+    $.getJSON('/pancake/getalarms', function(data) {
         var html = '';
         var docs = data['docs'];
         for (var i = 0; i < docs.length; i += 1) {
             html += "<tr><td>" + docs[i]['when'] + "</td>";
-            html += "<td>" + docs[i]['name'] + "</td>";
             html += "<td>" + docs[i]['message'] + "</td></tr>";
         }
         $("#alarmtable").html(html);
@@ -115,7 +133,7 @@ function UpdateShift(ev) {
     }
     $("#shift_modal").css("display", "block");
     var start = ev.start.toISOString().slice(0,10);
-    $.getJSON('get_shift_detail/' + start + '/', function(data) {
+    $.getJSON('/pancake/get_shift_detail/' + start + '/', function(data) {
         if (!data) {
             return;
         }

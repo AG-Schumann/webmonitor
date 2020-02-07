@@ -17,7 +17,8 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('doberview/', include('doberview.urls')),
+    path('xebra/', include('xebra.urls')),
+    #path('pancake/', include('pancake.urls')),
     path('control/', include('control.urls')),
     path('admin/', admin.site.urls),
 ]

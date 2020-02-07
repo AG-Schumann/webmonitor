@@ -1,0 +1,43 @@
+{% extends "xebra/base.html" %}
+<!-- hosts.html -->
+
+{% block subtitle %}Host settings{% endblock %}
+
+{% block content %}
+
+<div class="div_host">
+    Host:
+    <select id="host_select">
+        <option value="" selected>Select a host</option>
+        {% for host in hosts %}
+            <option value="{{ host }}">{{ host }}</option>
+        {% endfor %}
+    </select>
+
+<div class="div_default">
+    <form action="/xebra/change_default/" method="post">
+        {% csrf_token %}
+        <fieldset>
+            <legend id="host_legend">No host selected</legend>
+            <input type="text" name="host_name" id="host_name" hidden>
+            Sysmon timer: <input type="number" min="1" max="600" step="1" id="sysmon_timer" name="sysmon_timer" value="30"> seconds<br>
+            <div>
+            <table id="default_table" style="display: inline"></table> 
+            <table id="unmonitored_table" style="display:inline"></table> 
+            </div>
+            <br>
+            <button type="submit" value="Submit" id="xebra_hostbtn" disabled>Submit</button>
+            <button type="reset" value="Reset" >Reset</button>
+        </fieldset>    
+    </form> 
+</div>
+
+</div>
+{% endblock %}
+
+{% block javascript %}
+    <script>
+        $("#host_select").change(function() {LoadHostSettings($(this).val())});
+    </script>
+{% endblock %}
+                  

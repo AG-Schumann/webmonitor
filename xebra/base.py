@@ -1,16 +1,14 @@
 from pymongo import MongoClient
 from Doberman import Database
+import os
 
-with open('/home/darryl/Work/doberman/connection_uri','r') as f:
-    client = MongoClient(f.read().strip())
-    db = Database(client)
-    db.experiment_name = 'xebra'
+client = MongoClient(os.environ['DOBERMAN_MONGO_URI'])
+db = Database(client, experiment_name= 'xebra')
 
 _error_codes = {
         '00' : 'No error',
         '01' : 'Invalid alarm values'
         }
-
 def client(meta):
     return {'client_addr' : meta['REMOTE_ADDR'] if 'REMOTE_ADDR' in meta else 'web',
             'client_name' : meta['REMOTE_HOST'] if 'REMOTE_HOST' in meta else 'web',
@@ -29,8 +27,16 @@ def base_context(**kwargs):
 
     return context
 
-def trend_context(**kwargs):
+def pmt_context(**kwargs):
     context = base_context(**kwargs)
+    context['pmt_crate_channels'] = list(range(12))
+
+    return context
+
+def hosts_context(**kwargs):
+    context = base_context(**kwargs)
+    host_names = sorted(db.Distinct('common', 'hosts', 'hostname'))
+    context['hosts'] = host_names
 
     return context
 
@@ -43,6 +49,8 @@ def detail_context(error_code, **kwargs):
 
 def index_context(**kwargs):
     context = base_context(**kwargs)
+    host_names = sorted(db.Distinct('common', 'hosts', 'hostname'))
+    context['hosts'] = host_names
 
     return context
 

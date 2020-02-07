@@ -1,25 +1,17 @@
-{% extends "doberview/base.html" %}
+{% extends "xebra/base.html" %}
 <!-- index.html -->
-
-{% block subtitle %}Current status{% endblock %}
 
 {% block content %}
     <div style="background-color:#eeeeee;padding:5px;border-radius:5px">
-        <h2 style="background-color:#dddddd;padding:2px;border-radius:2px">Sensor status overview</h2>
-        {% for name in sensors %}
+        <h2 style="background-color:#dddddd;padding:2px;border-radius:2px">Current status</h2>
+        {% for hostname in hosts %}
             <table>
                 <thead>
                     <tr>
-                        <th colspan="4" id="{{ name }}_head">{{ name }}</th>
-                    </tr>
-                    <tr>
-                        <th>Description</th>
-                        <th>Time</th>
-                        <th>Value</th>
-                        <th>Runmode</th>
+                        <th colspan="4" id="{{ hostname }}_head">{{ hostname }}</th>
                     </tr>
                 </thead>
-                <tbody id="{{ name }}_body">
+                <tbody id="{{ hostname }}_body">
                     <tr><td colspan="4">Loading!</td></tr>
                 </tbody>
             </table>
@@ -46,7 +38,6 @@
         <table>
             <tr>
                 <th>Time</th>
-                <th>Name</th>
                 <th>Message</th>
             </tr>
             <tbody id="alarmtable"></tbody>

@@ -1,67 +1,12 @@
-var default_names = ['cryocon_22c__0/cryocon_22c__1/cryocon_22c__2/',
-    'Teledyne__0/', 'iseries1__0/'];
-
 function PopulateReadingDropdown(chartnum, sensor_name) {
     // called in trend
     console.log('Got ' + sensor_name);
-    $.getJSON('getreadings/'+sensor_name+'/', function(data) {
+    $.getJSON('/xebra/getreadings/'+sensor_name+'/', function(data) {
         var html = "<option value=''>select reading</option>";
         for (var i = 0; i < data['readings'].length; i += 1) {
             html += "<option value='"+i+"'>"+data['readings'][i]+"</option>";
         }
         $("#chart"+chartnum+"reading").html(html);
-    });
-}
-
-function SetUserChart(chartnum, sensor_name, reading_i) {
-    // called in trend
-    var name = sensor_name + "__" + reading_i;
-    $('#chartu' + chartnum + '_name').html(name);
-    DrawChart(chartnum, name);
-}
-
-function UpdateCharts() {
-    // called in trend
-    for (var i = 0; i < 3; i += 1) {
-        $.getJSON('getdata/' + default_names[i], function(data) {
-            var elem_name = "chartd" + i;
-            $("#" + elem_name).data = data['data'];
-            $("#" + elem_name).layout = data['layout'];
-            Plotly.redraw(elem_name);
-        });
-        if ($("#chartu" + i + "_name").html() != "None") {
-            $.getJSON('getdata/' + $("#chartu" + i + "_name") + '/', function(data) {
-                var elem_name = "chartu" + i;
-                $("#" + elem_name).data = data['data'];
-                $("#" + elem_name).layout = data['layout'];
-                Plotly.redraw(elem_name);
-            });
-        }
-    }
-}
-
-function DrawCharts() {
-    // called in trend
-    // can't forloop because fuck javascript
-    $.getJSON('getdata/' + default_names[0], function(data) {
-        var elem_name = 'chartd0';
-        Plotly.newPlot(elem_name, data['data'], data['layout'], data['config']);
-    });
-    $.getJSON('getdata/' + default_names[1], function(data) {
-        var elem_name = 'chartd1';
-        Plotly.newPlot(elem_name, data['data'], data['layout'], data['config']);
-    });
-    $.getJSON('getdata/' + default_names[2], function(data) {
-        var elem_name = 'chartd2';
-        Plotly.newPlot(elem_name, data['data'], data['layout'], data['config']);
-    });
-}
-
-function DrawChart(chartid, name) {
-    // called in trend
-    $.getJSON('getdata/' + name + '/', function(data) {
-        var elem_name = "chartu" + chartid;
-        Plotly.newPlot(elem_name, data['data'], data['layout'], data['config']);
     });
 }
 
@@ -80,7 +25,7 @@ function GetReadingDetails(sensor_name, reading_name) {
         $("#rd_roi").val("");
         return;
     }
-    $.getJSON('get_reading_detail/' + sensor_name + '/' + reading_name + '/', function(data) {
+    $.getJSON('/xebra/get_reading_detail/' + sensor_name + '/' + reading_name + '/', function(data) {
         if (data['html']) {
             for (var key in data['html']) {
                 $("#" + key).html(data['html'][key]);
@@ -102,7 +47,6 @@ function LoadSensorDetails(sensor_name) {
         $("#rdbtn").attr("disabled", true);
         $("#addrbtn").attr("disabled", true);
         $("#subtitle").html('Sensor detail:');
-
         $("#s_name_rd").val("");
         $("#reading_dropdown").html('<option value="" selected>Select reading</option>');
 
@@ -110,7 +54,7 @@ function LoadSensorDetails(sensor_name) {
         $("#address_block").html("No address info!");
         return;
     }
-    $.getJSON('get_sensor_details/' + sensor_name + '/', function(data) {
+    $.getJSON('/xebra/get_sensor_details/' + sensor_name + '/', function(data) {
         if (data['html']) {
             for (var key in data['html']) {
                 $("#" + key).html(data['html'][key]);
@@ -126,9 +70,29 @@ function LoadSensorDetails(sensor_name) {
     });
 }
 
+function LoadHostSettings(host_name) {
+    //called in detail
+    console.log('Getting details for ' + host_name);
+    if (host_name.length == 0) {
+        $("#sysmon_timer").val("");
+        return;
+    }
+    $.getJSON('/xebra/get_host_detail/' + host_name + '/', function(data) {
+        for (var key in data['html']) {
+                $("#" + key).html(data['html'][key]);
+                console.log(key + ' ' + data['html'][key]);
+            }
+            for (var key in data['value']) {
+                $("#" + key).val(data['value'][key]);
+                console.log(key + ' ' + data['value'][key]);
+            }
+        $("#xebra_hostbtn").attr("disabled", false);
+        });
+}
+
 function UpdateOverview() {
     // called in index
-    $.getJSON('getoverview', function(data) {
+    $.getJSON('/xebra/getoverview', function(data) {
         for (var key in data) {
             $("#" + key).html(data[key]);
         }
@@ -137,7 +101,7 @@ function UpdateOverview() {
 
 function UpdateLogs() {
     // called in index
-    $.getJSON('getlogs', function(data) {
+    $.getJSON('/xebra/getlogs', function(data) {
         var html = '';
         var docs = data['docs'];
         for (var i = 0; i < docs.length; i += 1) {
@@ -152,14 +116,44 @@ function UpdateLogs() {
 
 function UpdateAlarms() {
     // called in index
-    $.getJSON('getalarms', function(data) {
+    $.getJSON('/xebra/getalarms', function(data) {
         var html = '';
         var docs = data['docs'];
         for (var i = 0; i < docs.length; i += 1) {
             html += "<tr><td>" + docs[i]['when'] + "</td>";
-            html += "<td>" + docs[i]['name'] + "</td>";
             html += "<td>" + docs[i]['message'] + "</td></tr>";
         }
         $("#alarmtable").html(html);
     });
+}
+
+function UpdateShift(ev) {
+    if (new Date() > ev.start) {
+        return;
+    }
+    $("#shift_modal").css("display", "block");
+    var start = ev.start.toISOString().slice(0,10);
+    $.getJSON('/xebra/get_shift_detail/' + start + '/', function(data) {
+        if (!data) {
+            return;
+        }
+        $("#shift_start").html(data['start']);
+        $("#shift_end").html(data['end']);
+        if (data['primary'] != '') {
+            $("#primary_sel option:contains(" + data['primary'] + ")").prop({selected: true});
+            $("#primary_sel option.first").prop({selected: false});
+        }
+        if (data['secondary1'] != '') {
+            $("#secondary1_sel option:contains(" + data['secondary1'] + ")").prop({selected: true});
+            $("#secondary1_sel option.first").prop({selected: false});
+        }
+        if (data['secondary2'] != '') {
+            $("#secondary2_sel option:contains(" + data['secondary2'] + ")").prop({selected: true});
+            $("#secondary2_sel option.first").prop({selected: false});
+        }
+    });
+}
+
+function CloseModal() {
+    $("#shift_modal").css("display", "none");
 }

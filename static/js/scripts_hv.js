@@ -17,7 +17,7 @@ var pw_status = ["On", "Off"];
 var int_quantities = ["pon", "pdn", "pw", "stat"];
 
 function UpdatePMTTable(speed) {
-    $.getJSON('/doberview/get_pmt_status/' + speed + "/", function(data) {
+    $.getJSON('/xebra/get_pmts/' + speed + "/", function(data) {
         $(":selected").prop({selected: false});
         for (var key in data) {
             var res = key.split("_"); // quant_ch

@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.shortcuts import redirect
-
+from Doberman import dispatcher
 import datetime
 
 from . import base
@@ -16,9 +16,9 @@ def startstop(request):
     status = base.db.GetSensorSetting(name, 'status')
     user = base.client(request.META)
     if status == 'online':
-        base.db.ProcessCommandStepOne('stop %s' % name, user=user)
+        dispatcher.ProcessCommand(base.db, f'stop {name}', user=user)
     elif status == 'offline':
-        base.db.ProcessCommandStepOne('start %s' % name, user=user)
+        dispatcher.ProcessCommand(base.db, f'start {name}' % name, user=user)
     return redirect('detail')
 
 @require_POST
@@ -72,7 +72,7 @@ def log_command(request):
     if not base.is_schumann_subnet(request.META):
         return redirect('index')
     user = base.client(request.META)
-    base.db.ProcessCommandStepOne(request.POST['command'], user=user)
+    dispatcher.ProcessCommand(base.db,request.POST['command'], user=user)
     return redirect('detail')
 
 @require_POST
@@ -80,55 +80,88 @@ def change_reading(request):
     if not base.is_schumann_subnet(request.META):
         return redirect('index')
     new_vals = request.POST
-    name = new_vals['sensor_name']
-    if name not in base.db.Distinct('settings','sensors','name'):
+    sensor = new_vals['sensor_name']
+    if sensor not in base.db.Distinct('settings','sensors','name'):
         return redirect('detail')
     reading_name = new_vals['reading_name']
-    old_vals = base.db.GetReading(name, reading_name)
+    old_vals = base.db.GetReadingSetting(sensor, reading_name)
     if old_vals is None:
         return redirect('detail')
     user = base.client(request.META)
-    for key,func in zip(['status', 'readout_interval', 'recurrence', 'runmode'],
-                        [str, int, int, str]):
+    for key,func in zip(['status', 'readout_interval', 'runmode'],
+                        [str, int, str]):
         new_val = func(new_vals[key])  # django doesn't typecast
         if old_vals[key] != new_vals:
-            base.db.UpdateReading(name, reading_name, key, new_val)
-            base.db.LogUpdate(name=name,
+            base.db.SetReadingSetting(sensor, reading_name, key, new_val)
+            base.db.LogUpdate(name=sensor,
                               reading=reading_name,
                               key=key,
                               value=new_val,
                               **user)
-
     alarms = []
-    for lvl in range(len(old_vals['alarms'])):
-        alarms = [float(new_vals[f'al_{lvl}_0'])]+alarms+[float(new_vals[f'al_{lvl}_1'])]
-    for i in range(len(alarms)-1):
-        if alarms[i] >= alarms[i+1]:
-            return redirect('detail', error_code='01')
-            #return redirect(f'/doberview/detail/01/')
-    del alarms
-    for lvl, alarms in enumerate(old_vals['alarms']):
-        for i, al in enumerate(alarms):
-            new_val = float(new_vals[f'al_{lvl}_{i}'])
-            if al != new_val:
-                base.db.UpdateReading(name, reading_name, f'alarms.{lvl}.{i}', new_val)
-                base.db.LogUpdate(name=name,
-                                  reading=reading_name,
-                                  key=f'alarms.{lvl}.{i}',
-                                  value=new_val,
-                                  **user)
+    levels = {}
+    for key in new_vals.keys():
+        if "__" in key:
+            parts = key.split("__")
+            ty = parts[0]
+            parameter = parts[1]
+            if parameter.startswith('al'):
+                try:
+                    levels[ty][parameter] = new_vals[key]
+                except KeyError:
+                    levels[ty] = {}
+                    levels[ty][parameter] = new_vals[key]
+                continue
+            this_type = list(filter(lambda dict: dict['type'] == ty, alarms))
+            if this_type == []:
+                alarms.append({'type': ty, parameter: float(new_vals[key])})
+            else:
+               this_type[0][parameter] = float(new_vals[key])
+    for ty in levels.keys():
+        level_list = []
+        if len(list(levels[ty].keys())[0].split('_')) == 3: #levels of form [[ , ],[ , ], ...]
+            for i in range(int(len(levels[ty])/2)):
+                level_list.append([float(levels[ty][f'al_{i}_0']),float(levels[ty][f'al_{i}_1'])])
+        else:
+            for i in range(len(levels[ty])):
+                level_list.append(levels[ty][f'al_{i}'])
+        this_type = list(filter(lambda dict: dict['type'] == ty, alarms))
+        this_type[0]['levels'] = level_list
+        
+    for alarm in alarms:
+        base.db.UpdateAlarm(reading_name, alarm)
 
     for rm, cfg in old_vals['config'].items():
         new_val = int(new_vals[f'{rm}_level'])
         if cfg['level'] != new_val:
-            base.db.UpdateReading(name, reading_name, f'config.{rm}.level', new_val)
-            base.db.LogUpdate(name=name,
+            base.db.FindOneAndUpdate('settings', 'readings',{'name' : reading_name},
+                    {'$set' : {f'config.{rm}.level': new_val}})
+            base.db.LogUpdate(name=sensor,
                               reading=reading_name,
                               key=f'config.{rm}.level',
                               value=new_val,
                               **user)
 
     return redirect('detail')
+
+@require_POST
+def change_default(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('index')
+    info = request.POST
+    new_values = request.POST
+    host = new_values['host_name']
+    if host not in base.db.Distinct('common', 'hosts', 'hostname'):
+        return redirect('hosts')
+    old_values = base.db.GetHostSetting(host)
+    if new_values['sysmon_timer'] != old_values['sysmon_timer']:
+        base.db.SetHostSetting(host, set={'sysmon_timer': int(new_values['sysmon_timer'])})
+    new_default = []
+    for parameter in new_values.keys():
+        if parameter.startswith('checkbox'):
+            new_default.append(new_values[parameter])
+    base.db.SetHostSetting(host, set={'default':new_default})
+    return redirect('hosts')
 
 @require_POST
 def update_shift(request):
@@ -159,6 +192,15 @@ def add_new_contact(request):
     base.db.insertIntoDatabase('settings','contacts',contact)
     base.db.LogUpdate(field='contacts', new=info['firstname'] + info['lastname'][0], **user)
     return redirect('contacts')
+
+@require_POST
+def delete_alarm(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('index')
+    print('GAGAGAG')
+    print(request.POST)
+    #base.db.DeleteAlarm('temp_ts_top', 'timesince')
+    return redirect('detail')
 
 @require_POST
 def scram(request):

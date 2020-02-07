@@ -7,7 +7,7 @@
         <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-        <script src="{% static 'js/scripts_sc.js' %}"></script>
+        <script src="{% static 'js/scripts_xebra.js' %}"></script>
         {% block extrahead %}{% endblock %}
 
     </head>
@@ -16,15 +16,23 @@
 
         <!-- menu bar on top -->
         <div id="topmenu" class="navbar">
-            <a href="{% url 'index' %}">Overview</a>
-            <a href="{% url 'detail' %}">Sensor details</a>
-            <a href="{% url 'caen_hv' %}">PMT control</a>
-            <a href="{% url 'contacts' %}">Contact management</a>
+            <div class="dropdown">
+                <button class="dropbtn">Experiment  &#9660;</button>
+                <div class="dropdown-content">
+                    <a href="/xebra/">Xebra</a>
+                </div>
+            </div>
+            <a href="/xebra">Overview</a>
+            <a href="/xebra/diagrams">Diagrams</a>
+            <a href="/xebra/hosts">Host settings</a>
+            <a href="/xebra/detail">Sensor details</a>
+            <a href="/xebra/caen_hv">PMT control</a>
+            <a href="/xebra/contacts">Contact management</a>
             <a href="/control/">DAQ</a>
         </div>
 
         <header>
-            <h1>Doberman Overview</h1>
+            <h1>Xebra Overview</h1>
             <h2 id="subtitle">{% block subtitle %}{% endblock %}</h2>
         </header>
 
