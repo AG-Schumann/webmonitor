@@ -76,7 +76,8 @@ def log_command(request):
     if not base.is_schumann_subnet(request.META):
         return redirect('/pancake/')
     user = base.client(request.META)
-    dispatcher.process_command(base.db, request.POST['command'], user=user)
+    command = f'{request.post["sensor_name"]} {request.post["command"]}'
+    dispatcher.process_command(base.db, command, user=user)
     return redirect('/pancake/detail/')
 
 
