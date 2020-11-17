@@ -4,7 +4,7 @@ from pymongo import MongoClient
 import os
 
 
-def GetConfigDoc(request, mode):
+def get_config_doc(request, mode):
     client = MongoClient(os.environ['MONITOR_URI'])
     coll = client['kodiaq']['config']
     doc = coll.find_one({'mode' : mode})
@@ -16,6 +16,6 @@ def overview(request):
     client.close()
     return
 
-def updatemodedoc(request):
-    client = MongoClient(os.environ['MONITOR_URI'])
-    newdoc = request.POST[
+#def update_mode_doc(request):
+#    client = MongoClient(os.environ['MONITOR_URI'])
+#    newdoc = request.POST[

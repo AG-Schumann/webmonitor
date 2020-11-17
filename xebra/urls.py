@@ -17,15 +17,15 @@ urlpatterns = [
             name='error'),
 
         path('getoverview',
-             views_get.getoverview,
+             views_get.get_overview,
              name='getoverview'),
 
         path('getalarms',
-             views_get.getalarms,
+             views_get.get_alarms,
              name='getalarms'),
 
         path('getlogs',
-             views_get.getlogs,
+             views_get.get_logs,
              name='getlogs'),
 
         re_path(r'^detail/(?:(?P<error_code>[^/]+)/)?$',
