@@ -1,4 +1,4 @@
-{% extends "xebra/base.html" %}
+{% extends "pancake/base.html" %}
 <!-- detail.html -->
 
 {% block subtitle %}Sensor detail{% endblock %}
@@ -20,7 +20,7 @@
     </select>
 
 <div class="div_reading">
-    <form action="/xebra/change_reading/" method="post">
+    <form action="{% url 'change_reading' %}" method="post">
         {% csrf_token %}
         <input type="text" id="s_name_rd" name="sensor_name" hidden>
         <select name="reading_name" id="reading_dropdown">
@@ -34,7 +34,7 @@
             Readout interval (seconds): <input type="number" min="1" max="300" step="1" id="rd_roi" name="readout_interval"><br>
             Alarms: 
             {% for type in types %}
-            <table  id='{{ type }}_table'> 
+            <table  id='{{ type }}_table'>
                 <thead>
                     <tr>
                         <input type="text" id="{{type}}_enabled" name="{{type}}__enabled" hidden>
@@ -43,6 +43,8 @@
             </table>
             {% endfor %}
             
+            Config:
+            <ul id="rd_cfg_list"></ul>
             <button type="submit" value="Submit" id="rdbtn" disabled>Submit</button>
             <button type="reset" value="Reset">Reset</button>
         </fieldset>
@@ -50,7 +52,7 @@
 </div>
 
 <div class="div_address">
-    <form action="/xebra/change_address/" method="post">
+    <form action="{% url 'change_address' %}" method="post">
         {% csrf_token %}
         <input type="text" id="s_name_addr" name="sensor_name" hidden>
         <fieldset id="address_block">
@@ -59,7 +61,7 @@
 </div>
 
 <div class="div_command">
-    <form action="/xebra/log_command/" method="post">
+    <form action="{% url 'log_command' %}" method="post">
         {% csrf_token %}
         <fieldset>
             <legend>Custom command</legend>
@@ -85,33 +87,8 @@
                 enabled.value = "false";
             }
         }
-        
-        function update_delete_btns(type) {
-            var id = type + '_levels';
-            var lvl = document.getElementById(id).getElementsByTagName("li").length - 1;
-            for (var i=0; i <= lvl-1; ++i){
-                document.getElementById('delete_'+type+'_'+i).style.display = "none";
-            }
-            document.getElementById('delete_'+type+'_'+lvl).style.display = "inline";
-            document.getElementById('delete_'+type+'_0').style.display = "none";
-
-        }
-
-        function AddLevel(type) {
-            var id = type +'_levels';
-            var lvl = document.getElementById(id).getElementsByTagName("li").length;
-            if (type == 'time_since') {
-            var li = '<li>Level '+lvl+':<input type="number" name="time_since__max_duration_'+lvl+'" step="any"><button type="button" id="delete_'+type+'_'+lvl+'" onclick="$(this).parent().remove(); update_delete_btns(\''+type+'\');">Delete</button></li>';
-            }
-            else {
-            var li = '<li>Level '+lvl+': Low:<input type="number" name="'+type+'__al_'+lvl+'_0" step="any"> High:<input type="number" name="'+type+'__al_'+lvl+'_1" step="any"><button type="button" id="delete_'+type+'_'+lvl+'" onclick="$(this).parent().remove(); update_delete_btns(\''+type+'\');">Delete</button></li>';
-            }
-            document.getElementById(id).insertAdjacentHTML('beforeend', li);
-            update_delete_btns(type);
-        }
-
 
         $("#sensor_select").change(function() {LoadSensorDetails($(this).val())});
-        $("#reading_dropdown").change(function() {GetReadingDetails($("#s_name_rd").val(), $(this).val())});
+        $('#reading_dropdown').change(function() {GetReadingDetails($("#s_name_rd").val(), $(this).val())});
     </script>
 {% endblock %}

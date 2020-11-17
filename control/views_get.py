@@ -21,7 +21,6 @@ def get_runs(request, experiment="xebra", limit=None):
             duration = (datetime.datetime.utcnow() - row['start']).total_seconds()
         doc = {
                 'run_id' : '%i' % row['run_id'],
-                'tags' : row['tags'],
                 'mode' : row['mode'],
                 'start' : row['start'].strftime('%Y-%m-%d %H:%M'),
                 'end' : end,
@@ -58,14 +57,18 @@ def get_status(request):
 
     status_doc = base.db['system_control'].find_one({'subsystem' : 'daqspatcher'})
     ret['spatchstatus'] = status_doc['status']
-    ret['spatchmsg'] = status_doc['msg'] if status_doc['msg'] else ''
+    ret['daqworklist']  = status_doc['worklist']
+    ret['spatchmsg']    = status_doc['msg'] if status_doc['msg'] else ''
     if ret['daqstatus'] == 'running':
         run_duration = status_doc['duration']
-        run_start = base.db['runs'].find_one({},{'start': 1}).sort([('_id', -1)])['start']
+        #run_start = base.db['runs'].find_one({},{'start': 1}).sort([('_id', -1)])['start']
+        run_start = list(base.db["runs"].aggregate([{'$match': {"start": {'$exists': 1}}},{'$sort': {"_id": -1}},{'$limit': 1}]))[0]["start"]
         runtime = (datetime.datetime.utcnow() - run_start).total_seconds()
-        ret['runprogress'] = '%d' % (runtime/run_duration*100)
+        ret['runprogress'] = runtime
+        ret['run_duration'] = run_duration
     else:
         ret['runprogress'] = '0'
+        ret['run_duration'] = '1'
 
     status_doc = base.db['system_control'].find_one({'subsystem' : 'straxinator'})
     ret['straxstatus'] = status_doc['status']
@@ -75,9 +78,6 @@ def get_status(request):
     ret['ledstatus'] = status_doc['status']
     #ret['ledmsg'] = status_doc['msg'] if status_doc['msg'] else ''
 
-    if ret['daqstatus'] == 'running':  # add progress bar
-        rundoc = ''
-        ret['runprogress'] = '%i'
     return JsonResponse(ret)
 
 def get_cfg_doc(request, name):
@@ -91,6 +91,7 @@ def get_run_detail(request, experiment, runid):
     doc = base.db['runs'].find_one({'experiment' : experiment, 'run_id' : int(runid)})
     if doc is None:
         return JsonResponse({})
+        return JsonResponse({})
     del doc['_id']
     if 'end' in doc:
         doc['duration'] = (doc['end']-doc['start']).total_seconds()
@@ -99,4 +100,57 @@ def get_run_detail(request, experiment, runid):
         doc['duration'] = 'Active'
         doc['end'] = 'None'
     doc['start'] = doc['start'].isoformat(sep=' ')
-    return JsonResponse(doc)
+
+
+def get_upcoming_runs(request, experiment):
+    
+    int_runs = base.db["runs_todo"].count_documents({'experiment' : experiment})
+    
+    int_duration  = sum([int(x["duration"]) for x in list(base.db["runs_todo"].find({'experiment': experiment, "duration":{'$exists': 1}}))])
+    int_duration += base.db["runs_todo"].count_documents({"duration":{'experiment' : experiment, '$exists': 0}}) * 3 
+
+    
+    return JsonResponse({"runs": int_runs, "duration": int_duration})
+    
+def get_upcoming_runs_list(request, experiment):
+    
+    docs = base.db["runs_todo"].find({'experiment': experiment})
+    runs = []
+    for this_doc in docs:
+        this_run = {
+            "id": str(this_doc["_id"]),
+            "mode": this_doc["mode"],
+            "comment": this_doc["comment"],
+            "duration": this_doc["duration"],
+            "config_override": this_doc["config_override"],
+        }
+        
+        runs.append(this_run)
+    
+    
+    
+    return JsonResponse({"runs":runs})
+    
+    
+    
+def clear_upcoming_runs(request, experiment):
+    if not base.is_schumann_subnet(request.META):
+        return JsonResponse({"OK": False, "msg": "user is not authorized"})
+        
+    base.db["runs_todo"].delete_many({'experiment': experiment})
+    return JsonResponse({
+        "OK": True,
+        "experiment": experiment
+    })
+
+def clear_a_upcoming_run(request, experiment, objectid):
+    if not base.is_schumann_subnet(request.META):
+        return JsonResponse({"OK": False, "msg": "user is not authorized"})
+        
+    base.db["runs_todo"].delete_many({'experiment': experiment, '_id': ObjectId(objectid)})
+    
+    return JsonResponse({
+        "OK": True,
+        "experiment": experiment,
+        "objectid": objectid,
+    })

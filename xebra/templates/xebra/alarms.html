@@ -1,0 +1,56 @@
+{% extends "xebra/base.html" %}
+<!-- detail.html -->
+
+{% block subtitle %}Aggregated alarms{% endblock %}
+
+{% block content %}
+
+<div class="div_alarms">
+    Alarm:
+    <select id="alarm_select">
+        <option value="" selected>Select aggregation</option>
+        {% for aggregation in aggregations %}
+            <option value="{{ aggregation}}">{{ aggregation }}</option>
+        {% endfor %}
+    </select>
+  <fieldset>
+    <form action="/xebra/change_aggregation/" method="post">
+        {%csrf_token %}
+        <font id="name_field" hidden> Name: </font> <input type="text" id="agg_name" name="agg_name" hidden> <br>
+        Operation: <select name="operation" id="operation"></select><br>
+        Time window: <input type="number" min="1" max="600" step="1" id="time_window" name="time_window">
+        seconds <br>
+        Alarms: <ul id=agg_list></ul>
+        <button type="button" id="add_agg" style="margin-left: 3em; margin-bottom: 2em;" disabled> Add alarm</button><br>
+        <button type="button" id="new_agg" style="margin-bottom: 1em;" hidden> New Alarm Aggregation</button><br>
+        <button type="submit" value="Submit" id="agg_btn" disabled>Submit</button>
+        <button type="reset" value="Reset">Reset</button>
+     </form>
+   </fieldset>
+ </div>
+
+ {% endblock %}
+
+ {%block javascript %}
+    <script>
+        document.getElementById("add_agg").addEventListener("click", function() 
+            {AddAlarm(document.getElementById("agg_name").value)});
+
+        document.getElementById("new_agg").addEventListener("click", function()
+            {NewAggregation()});
+
+        function update_delete_btns() {
+            var index = document.getElementById("agg_list").getElementsByTagName("li").length - 1;
+            for (var i=0; i <= index-1; ++i){
+                document.getElementById('delete_'+i).style.display = "none";
+            }
+            document.getElementById('delete_'+index).style.display = "inline";
+            document.getElementById('delete_0').style.display = "none";
+            document.getElementById('delete_1').style.display = "none";
+            
+        }
+        $("#alarm_select").change(function() {LoadAlarmAggregation($(this).val())});
+        
+
+    </script>
+{% endblock %}

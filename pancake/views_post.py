@@ -8,16 +8,31 @@ from . import views_get
 from . import base
 
 @require_POST
+def startstop(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('/pancake/')
+    name = request.POST['sensor_name']
+    if name not in base.db.Distinct('settings','sensors','name'):
+        return redirect('/pancake/detail/')
+    status = base.db.GetSensorSetting(name, 'status')
+    user = base.client(request.META)
+    if status == 'online':
+        dispatcher.ProcessCommand(base.db, f'stop {name}', user=user)
+    elif status == 'offline':
+        dispatcher.ProcessCommand(base.db, f'start {name}' % name, user=user)
+    return redirect('/pancake/detail/')
+
+@require_POST
 def change_address(request):
     if not base.is_schumann_subnet(request.META):
-        return redirect('/xebra/error')
+        return redirect('/pancake/')
     new_vals = request.POST
     name = new_vals['sensor_name']
     if name not in base.db.Distinct('settings','sensors','name'):
-        return redirect('/xebra/detail/')
+        return redirect('/pancake/detail/')
     old_vals = base.db.GetSensorSetting(name, 'address')
     if old_vals is None:
-        return redirect('/xebra/detail/')
+        return redirect('/pancake/detail/')
     user = base.client(request.META)
     if 'ip' in old_vals:
         if new_vals['ip'] != old_vals['ip']:
@@ -51,28 +66,28 @@ def change_address(request):
                               key='address.baud',
                               value=int(new_vals['baud']),
                               **user)
-    return redirect('/xebra/detail/')
+    return redirect('/pancake/detail/')
 
 @require_POST
 def log_command(request):
     if not base.is_schumann_subnet(request.META):
-        return redirect('/xebra/error')
+        return redirect('/pancake/')
     user = base.client(request.META)
     dispatcher.ProcessCommand(base.db,request.POST['command'], user=user)
-    return redirect('/xebra/detail/')
+    return redirect('/pancake/detail/')
 
 @require_POST
 def change_reading(request):
     if not base.is_schumann_subnet(request.META):
-        return redirect('/xebra/error')
+        return redirect('/pancake/')
     new_vals = request.POST
     sensor = new_vals['sensor_name']
     if sensor not in base.db.Distinct('settings','sensors','name'):
-        return redirect('/xebra/detail/')
+        return redirect('/pancake/detail/')
     reading_name = new_vals['reading_name']
     old_vals = base.db.GetReadingSetting(sensor, reading_name)
     if old_vals is None:
-        return redirect('/xebra/detail/')
+        return redirect('/pancake/detail/')
     user = base.client(request.META)
     for key,func in zip(['status', 'readout_interval', 'runmode'],
                         [str, int, str]):
@@ -100,7 +115,7 @@ def change_reading(request):
                     levels[parameter[3:]] = float(new_vals[key])
                 elif parameter.startswith('max_duration'):
                     # alarm levels for time_since
-                    max_duration[parameter[13:]] = float(new_vals[key])
+                    levels[parameter[13:]] = float(new_vals[key])
                 elif parameter == 'enabled':
                     new_alarm[parameter] = new_vals[key]
                 else:
@@ -118,16 +133,28 @@ def change_reading(request):
         if new_alarm != old_alarm:       
             base.db.UpdateAlarm(reading_name, new_alarm)
 
-    return redirect('/xebra/detail/')
+    for rm, cfg in old_vals['config'].items():
+        new_val = int(new_vals[f'{rm}_level'])
+        if cfg['level'] != new_val:
+            base.db.FindOneAndUpdate('settings', 'readings',{'name' : reading_name},
+                    {'$set' : {f'config.{rm}.level': new_val}})
+            base.db.LogUpdate(name=sensor,
+                              reading=reading_name,
+                              key=f'config.{rm}.level',
+                              value=new_val,
+                              **user)
+
+    return redirect('/pancake/detail/')
 
 @require_POST
 def change_default(request):
     if not base.is_schumann_subnet(request.META):
-        return redirect('/xebra/error')
+        return redirect('/pancake/')
+    info = request.POST
     new_values = request.POST
     host = new_values['host_name']
     if host not in base.db.Distinct('common', 'hosts', 'hostname'):
-        return redirect('/xebra/hosts')
+        return redirect('/pancake/hosts/')
     old_values = base.db.GetHostSetting(host)
     if new_values['sysmon_timer'] != old_values['sysmon_timer']:
         base.db.SetHostSetting(host, set={'sysmon_timer': int(new_values['sysmon_timer'])})
@@ -136,53 +163,25 @@ def change_default(request):
         if parameter.startswith('checkbox'):
             new_default.append(new_values[parameter])
     base.db.SetHostSetting(host, set={'default':new_default})
-    return redirect('/xebra/hosts')
-
-@require_POST
-def change_aggregation(request):
-    if not base.is_schumann_subnet(request.META):
-        return redirect('/xebra/error')
-    new_values = request.POST
-    name = new_values['agg_name']
-    operation = new_values['operation']
-    time_window = new_values['time_window']
-    alarms_count = 0 
-    for key in new_values.keys():
-        if key[-2:] == "rd":
-            alarms_count += 1
-    alarms = []
-    for i in range(alarms_count):
-        rd = new_values[f'{i}_rd']
-        ty = new_values[f'{i}_type']
-        if (rd or ty) == "none":
-            return redirect('/xebra/alarms')
-        alarms.append(rd + ',' + ty) 
-    doc = {'name': name, 'operation': operation, 'time_window': time_window, 'alarms': alarms}
-    if name in base.db.Distinct('settings', 'alarm_aggregations', 'name'):
-        base.db.FindOneAndUpdate('settings', 'alarm_aggregations', {'name': name}, {'$set':{'operation':operation}})
-        base.db.FindOneAndUpdate('settings', 'alarm_aggregations', {'name': name}, {'$set':{'time_window':time_window}})
-        base.db.FindOneAndUpdate('settings', 'alarm_aggregations', {'name': name}, {'$set':{'alarms': alarms}})
-    else:
-        #add new aggregation
-        print()
-    return redirect('/xebra/alarms')
+    return redirect('/pancake/hosts')
 
 @require_POST
 def update_shift(request):
     if not base.is_schumann_subnet(request.META):
-        return redirect('/xebra/error')
+        return redirect('/pancake/')
     info = request.POST
     user = base.client(request.META)
     shift_key = info['shift_key']
     shifters = [info[k] if info[k] != 'None' else '' for k in ['primary', 'secondary1', 'secondary2']]
-    base.db.FindOneAndUpdate('settings', 'shifts', {'key':shift_key}, {'$set':{'shifters':shifters}})
-    base.db.LogUpdate(field='contacts', shift_key=shift_key, shifters=shifters, **user)
-    return redirect('/xebra/contacts')
+    base.db.updateDatabase('settings','shifts', cuts={'shift_key' : shift_key},
+            updates = {'$set' : {'shifters' : shifters}})
+    base.db.LogUpdate(field='contacts', shift_key=shift_id, shifters=shifters, **user)
+    return redirect('/pancake/contacts/')
 
 @require_POST
 def add_new_contact(request):
     if not base.is_schumann_subnet(request.META):
-        return redirect('/xebra/error')
+        return redirect('/pancake/')
     info = request.POST
     user = base.client(request.META)
     contact = {'name' : info['firstname'] + info['lastname'][0],
@@ -194,22 +193,21 @@ def add_new_contact(request):
             }
     base.db.insertIntoDatabase('settings','contacts',contact)
     base.db.LogUpdate(field='contacts', new=info['firstname'] + info['lastname'][0], **user)
-    return redirect('/xebra/contacts')
+    return redirect('/pancake/contacts/')
 
 @require_POST
 def scram(request):
     if not base.is_schumann_subnet(request.META):
-        return redirect('/xebra/error')
-    user = base.client(request.META)
+        return redirect('/pancake/')
     for ch in range(12):
-        dispatcher.ProcessCommand(base.db, f'caen_sy5527 set ch{ch} pdn 1', user=user)
-        dispatcher.ProcessCommand(base.db, f'caen_sy5527 set ch{ch} pw 0', user=user)
-    return redirect('/xebra/caen_hv')
+        base.dispatcher.ProcessCommand(f'caen_sy5527 set ch{ch} pdn 1')
+        base.dispatcher.ProcessCommand(f'caen_sy5527 set ch{ch} pw 0')
+    return HttpResponseNotModified()
 
 @require_POST
 def update_pmts(request):
     if not base.is_schumann_subnet(request.META):
-            return redirect('/xebra/error')
+        return redirect('/pancake/')
     new_values = request.POST
     user = base.client(request.META)
     is_digital = {'setp' : False, 'tripi' : False, 'tript' : False, 'rup' : False,
@@ -236,4 +234,4 @@ def update_pmts(request):
                         'name' : 'caen_sy5527'}
                 doc.update(user)
                 base.db.LogCommand(doc)
-    return redirect('/xebra/caen_hv')
+    return redirect('/pancake/caen_hv/')

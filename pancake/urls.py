@@ -7,14 +7,9 @@ from . import views_post
 from . import views_get
 
 urlpatterns = [
-        
         path('',
              views_render.index,
              name='index'),
-        
-        path('error',
-            views_render.error,
-            name='error'),
 
         path('getoverview',
              views_get.getoverview,
@@ -31,9 +26,7 @@ urlpatterns = [
         re_path(r'^detail/(?:(?P<error_code>[^/]+)/)?$',
                 views_render.detail,
                 name='detail'),
-        path('alarms',
-            views_render.alarms,
-            name='alarms'),
+
 #        re_path(r'^getreadings/(?P<name>[^/]+)/$',
 #                views_get.getreadings,
 #                name='getreadings'),
@@ -49,6 +42,10 @@ urlpatterns = [
         path('caen_hv',
              views_render.pmts,
              name='caen_hv'),
+
+        re_path(r'^startstop/$',
+                views_post.startstop,
+                name='startstop'),
 
         re_path(r'^change_address/$',
                 views_post.change_address,
@@ -69,10 +66,6 @@ urlpatterns = [
         re_path(r'get_reading_detail/(?P<sensor_name>[^/]+)/(?P<reading_name>[^/]+)/$',
                 views_get.get_reading_detail,
                 name='get_reading_detail'),
-        
-        re_path(r'get_alarm_aggregation/(?P<name>[^/]+)/$',
-                views_get.get_alarm_aggregation,
-                name='get_alarm_aggregation'),
 
         re_path(r'change_reading/$',
                 views_post.change_reading,
@@ -82,9 +75,6 @@ urlpatterns = [
                 views_post.change_default,
                 name='change_default'),
 
-        re_path(r'^change_aggregation/$',
-                views_post.change_aggregation,
-                name='change_aggregation'),
         path('contacts',
                 views_render.contacts,
                 name='contacts'),
@@ -113,7 +103,7 @@ urlpatterns = [
                 views_post.update_pmts,
                 name='update_pmts'),
         
-        re_path(r'scram/$',
+        re_path(r'^scram/$',
                 views_post.scram,
                 name='scram'),
         ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

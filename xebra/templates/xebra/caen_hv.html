@@ -5,17 +5,29 @@
 <script src="/static/js/scripts_hv.js"></script>
 {% endblock %}
 
-{% block subtitle %}HV crate control{% endblock %}
+{% block subtitle %}HV crate control {% endblock %}
 
 {% block content %}
-
+<table>
+   <thead>
+        <th><button onclick="ToggleEdit()">Edit</button></th>
+        <th colspan="10">Note: Updates may take up to 20 seconds before they are shown in the table</th>
+        <th>
+            <form action="/xebra/scram/" method="post">
+                {% csrf_token %}
+                <button type="submit" id="scrambtn">Scram</button>
+            </form>
+        </th>
+   </thead>
+</table>
 <div>
+    <form action="/xebra/update_pmts/" method="post">
+    {% csrf_token %}
     <table>
         <thead>
             <tr>
-                <th><button type="submit" formid="pmt_form">Submit</button></th>
-                <th colspan="10">PMT control</th>
-                <th><form action="/doberview/scram">{% csrf_token %}<button type="submit" id="scrambtn">Scram</button></form></th>
+                <th><button type="submit" id="submit_bt" value="Submit" disabled="true">Submit</button></th>
+                <th colspan="11">PMT control</th>
             </tr><tr>
                 <th>Channel</th>
                 <th>Status</th>
@@ -32,8 +44,6 @@
             </tr>
         </thead>
         <tbody>
-            <form action="doberview/update_pmts">
-                {% csrf_token %}
                 {% for ch in pmt_crate_channels %}
                 <tr>
                     <td class="tr_ch">{{ ch }}</td>
@@ -41,55 +51,76 @@
                     </td>
                     <td id="ch{{ ch }}_vmon" class="tr_vmon">
                     </td>
-                    <td id="ch{{ ch }}_setp" class="tr_setp">
-                        <input type="number" name="ch{{ ch }}_setp" max="3500" min="0">
+                    <td>
+                        <input type="number" id="ch{{ ch }}_setp" name="ch{{ ch }}_setp" class="setp" max="3500" min="0", readonly="true">
                     </td>
                     <td id="ch{{ ch }}_pw" class="tr_pw">
-                        <select name="ch{{ ch }}_pw">
+                        <select name="ch{{ ch }}_pw" class="pw" disabled="true">
                             <option value="On">On</option>
                             <option value="Off">Off</option>
                         </select>
                     </td>
                     <td id="ch{{ ch }}_imon" class="tr_imon">
                     </td>
-                    <td id="ch{{ ch }}_tripi" class="tr_tripi">
-                        <input type="number" name="ch{{ ch }}_tripi" max="3000" min="0">
+                    <td >
+                        <input type="number" id="ch{{ ch }}_tripi" name="ch{{ ch }}_tripi" class="tripi"  max="3000" min="0", readonly="true">
                     </td>
-                    <td id="ch{{ ch }}_tript" class="tr_tript">
-                        <input type="number" name="ch{{ ch }}_tript" max="1000" min="0">
+                    <td >
+                        <input type="number" id="ch{{ ch }}_tript" name="ch{{ ch }}_tript" class="tript" max="1000" min="0", step="0.1", readonly="true">
                     </td>
-                    <td id="ch{{ ch }}_rup" class="tr_rup">
-                        <input type="number" name="ch{{ ch }}_rup" max="500" min="1">
+                    <td>
+                        <input type="number" id="ch{{ ch }}_rup" name="ch{{ ch }}_rup" class="rup" max="500" min="1", readonly="true">
                     </td>
-                    <td id="ch{{ ch }}_rdn" class="tr_rdn">
-                        <input type="number" name="ch{{ ch }}_rdn" max="500" min="1">
+                    <td>
+                        <input type="number" id="ch{{ ch }}_rdn" name="ch{{ ch }}_rdn" class="rdn" max="500" min="1", readonly="true">
                     </td>
                     <td id="ch{{ ch }}_pon" class="tr_pon">
-                        <select name="ch{{ ch }}_pon">
+                        <select name="ch{{ ch }}_pon" class="pon", disabled="true">
                             <option value="En">En</option>
                             <option value="Dis">Dis</option>
                         </select>
                     </td>
                     <td id="ch{{ ch }}_pdn" class="tr_pdn">
-                        <select name="ch{{ ch }}_pdn">
+                        <select name="ch{{ ch }}_pdn" class="pdn" disabled="true">
                             <option value="Ramp">Ramp</option>
                             <option value="Kill">Kill</option>
                         </select>
                     </td>
                 </tr>
                 {% endfor %}
-            </form>
         </tbody>
         <tfoot></tfoot>
     </table>
+</form>
 </div>
 
 {% endblock %}
 
 {% block javascript %}
     <script>
-        window.setInterval(UpdatePMTTable("fast"), 1000);
-        window.setInterval(UpdatePMTTable("slow"), 60000);
-        window.onLoad = UpdatePMTTable("slow");
+        var interval = window.setInterval(function() {UpdatePMTTable("fast")}, 2000);
+        window.onLoad = UpdatePMTTable("fast");
+        function ToggleEdit() {
+            window.clearInterval(interval)
+            document.getElementById("submit_bt").disabled = false;
+            var setpt = document.getElementsByClassName("setp");
+            var tripi = document.getElementsByClassName("tripi");
+            var tript = document.getElementsByClassName("tript");
+            var rup = document.getElementsByClassName("rup");
+            var rdn = document.getElementsByClassName("rdn");
+            var pw = document.getElementsByClassName("pw");
+            var pon = document.getElementsByClassName("pon");
+            var pdn = document.getElementsByClassName("pdn");
+            for (var i=0; i<setpt.length; i++) {
+                setpt[i].readOnly = false;
+                tripi[i].readOnly = false;
+                tript[i].readOnly = false;
+                rup[i].readOnly = false;
+                rdn[i].readOnly = false;
+                pw[i].disabled = false;
+                pon[i].disabled = false;
+                pdn[i].disabled = false;
+            }
+        }
     </script>
 {% endblock %}

@@ -1,4 +1,4 @@
-{% extends "xebra/base.html" %}
+{% extends "pancake/base.html" %}
 <!-- hosts.html -->
 
 {% block subtitle %}Host settings{% endblock %}
@@ -15,7 +15,7 @@
     </select>
 
 <div class="div_default">
-    <form action="/xebra/change_default/" method="post">
+    <form action="/pancake/change_default/" method="post">
         {% csrf_token %}
         <fieldset>
             <legend id="host_legend">No host selected</legend>
@@ -26,12 +26,14 @@
             <table id="unmonitored_table" style="display:inline"></table> 
             </div>
             <br>
-            <button type="submit" value="Submit" id="xebra_hostbtn" disabled>Submit</button>
+            <button type="submit" value="Submit" id="pancake_hostbtn" disabled>Submit</button>
             <button type="reset" value="Reset" >Reset</button>
         </fieldset>    
     </form> 
 </div>
+
 <iframe id="grafana" src="" width="100%" height="100%" frameborder="0"></iframe>
+
 </div>
 {% endblock %}
 

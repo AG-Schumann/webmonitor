@@ -16,6 +16,12 @@ function GetReadingDetails(sensor_name, reading_name) {
     if (reading_name.length == 0) {
         $("#rd_legend").html("No reading selected");
         $("#rd_alarm_list").html("");
+        $("#pid_checkbox").prop("checked", false);
+        $("#time_since_checkbox").prop("checked", false);
+        $("#simple_checkbox").prop("checked", false);
+        $("#pid_body").html("");
+        $("#time_since_body").html("");
+        $("#simple_body").html("");
         $("#rd_cfg_list").html("");
         $("#rd_runmode").html("");
         $("#rd_status").html("");
@@ -33,6 +39,17 @@ function GetReadingDetails(sensor_name, reading_name) {
             for (var key in data['value']) {
                 $("#" + key).val(data['value'][key]);
             }
+            var bool_map = {"true": true, "false": false}
+            var style_map = {"true": "table-header-group", "false": "none"}
+            $("#pid_checkbox").prop("checked", bool_map[data['value']['pid_enabled']]);
+            $("#time_since_checkbox").prop("checked", bool_map[data['value']['time_since_enabled']]);
+            $("#simple_checkbox").prop("checked", bool_map[data['value']['simple_enabled']]);
+            document.getElementById('pid_body').style.display = style_map[data['value']['pid_enabled']];
+            document.getElementById('time_since_body').style.display = style_map[data['value']['time_since_enabled']];
+            document.getElementById('simple_body').style.display = style_map[data['value']['simple_enabled']];
+            update_delete_btns("pid");
+            update_delete_btns("time_since");
+            update_delete_btns("simple");
         }
     });
 }
@@ -70,6 +87,64 @@ function LoadSensorDetails(sensor_name) {
     });
 }
 
+function LoadAlarmAggregation(name) {
+    //called in alarms
+    console.log('Getting details for ' + name);
+    if (name.length == 0) {
+        $("#agg_name").val("");
+        $("#operation").html("");
+        $("#time_window").val("");
+        $("#agg_list").html("");
+        return;
+    }
+    $.getJSON('/xebra/get_alarm_aggregation/' + name + '/', function(data) {
+        if (data['html']) {
+            for (var key in data['html']) {
+                $("#" + key).html(data['html'][key]);
+            }
+            for (var key in data['value']) {
+                $("#" + key).val(data['value'][key]);
+            }
+            $("#add_agg").attr("disabled", false);
+            $("#agg_btn").attr("disabled", false);
+            update_delete_btns();
+        }
+    });
+}
+
+function AddAlarm(name) {
+    //called in alarms
+    var ul = document.getElementById("agg_list");
+    var index = ul.getElementsByTagName("li").length;
+    var types = ["pid", "time_since", "simple"];
+    console.log('Adding alarm ' + index + ' to ' + name);
+    var li = '<li> <select id="'+index+'_rd" name="'+index+'_rd">';
+    $.getJSON('/xebra/get_alarm_aggregation/' + name + '/', function(data) {
+        if (data['html']) {
+            li += data['html']['rd_options']+'</select><select id="'+index+'_type" name="'+index+'_type"><option value="none" selected> Select type </option> ';
+            for (var it in types) {
+                li += '<option value="'+types[it]+'">'+types[it]+'</option>';
+            }
+            li += '</select><button type="button" id="delete_'+index+'" onclick="$(this).parent().remove(); update_delete_btns();">Delete</button></li>'
+            li += '</select></li>';
+            ul.insertAdjacentHTML('beforeend', li);
+            update_delete_btns();
+        }
+    });
+}
+
+function NewAggregation() {
+    //called in alarms
+    
+    $("#name_field").show();
+    $("#agg_name").show();
+    $("#add_agg").attr("disabled", false);
+    $("#agg_btn").attr("disabled", false);
+}
+
+            
+
+
 function LoadHostSettings(host_name) {
     //called in detail
     console.log('Getting details for ' + host_name);
@@ -86,6 +161,7 @@ function LoadHostSettings(host_name) {
                 $("#" + key).val(data['value'][key]);
                 console.log(key + ' ' + data['value'][key]);
             }
+        $("#grafana").attr("src", data['html']['grafana'])
         $("#xebra_hostbtn").attr("disabled", false);
         });
 }
@@ -128,9 +204,6 @@ function UpdateAlarms() {
 }
 
 function UpdateShift(ev) {
-    if (new Date() > ev.start) {
-        return;
-    }
     $("#shift_modal").css("display", "block");
     var start = ev.start.toISOString().slice(0,10);
     $.getJSON('/xebra/get_shift_detail/' + start + '/', function(data) {
@@ -139,6 +212,7 @@ function UpdateShift(ev) {
         }
         $("#shift_start").html(data['start']);
         $("#shift_end").html(data['end']);
+        $("#shift_key").val(data['shift_key']);
         if (data['primary'] != '') {
             $("#primary_sel option:contains(" + data['primary'] + ")").prop({selected: true});
             $("#primary_sel option.first").prop({selected: false});

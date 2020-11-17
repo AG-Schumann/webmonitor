@@ -15,3 +15,7 @@ def config(request, msgcode=None):
 def runs(request, msgcode=None):
     context = base.runs_context()
     return render(request, 'control/runs.html', context)
+
+def runs_todo(request, msgcode=None):
+    context = base.runs_context()
+    return render(request, 'control/runs_todo.html', context)

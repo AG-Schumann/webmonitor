@@ -2,9 +2,17 @@ from django.shortcuts import render
 
 from . import base
 
+def error(request):
+    context = base.index_context()
+    return render(request, 'xebra/error.html', context)
+
 def detail(request, error_code=None):
     context = base.detail_context(error_code)
     return render(request, 'xebra/detail.html', context)
+
+def alarms(request):
+    context = base.alarms_context()
+    return render(request, 'xebra/alarms.html', context)
 
 def index(request):
     context = base.index_context()

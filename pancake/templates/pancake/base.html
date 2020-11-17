@@ -7,7 +7,7 @@
         <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 
         <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-        <script src="{% static 'js/scripts_xebra.js' %}"></script>
+        <script src="{% static 'js/scripts_pancake.js' %}"></script>
         {% block extrahead %}{% endblock %}
 
     </head>
@@ -23,18 +23,15 @@
                     <a href="/pancake/">Pancake</a>
                 </div>
             </div>
-            <a href="/xebra">Overview</a>
-            <a href="/xebra/diagrams">Diagrams</a>
-            <a href="/xebra/hosts">Host settings</a>
-            <a href="/xebra/detail">Sensor details</a>
-            <a href="/xebra/caen_hv">PMT control</a>
-            <a href="/xebra/alarms">Alarm aggregation</a>
-            <a href="/xebra/contacts">Contact management</a>
-            <a href="/control/">DAQ</a>
+            <a href="/pancake">Overview</a>
+            <a href="/pancake/diagrams">Diagrams</a>
+            <a href="/pancake/hosts">Host settings</a>
+            <a href="/pancake/detail">Sensor details</a>
+            <a href="/pancake/contacts">Contact management</a>
         </div>
 
         <header>
-            <h1>Xebra Overview</h1>
+            <h1>Pancake Overview</h1>
             <h2 id="subtitle">{% block subtitle %}{% endblock %}</h2>
         </header>
 

@@ -3,7 +3,7 @@ from Doberman import Database
 import os
 
 client = MongoClient(os.environ['DOBERMAN_MONGO_URI'])
-db = Database(client, experiment_name= 'xebra')
+db = Database(client, experiment_name= 'pancake')
 
 _error_codes = {
         '00' : 'No error',
@@ -44,12 +44,6 @@ def detail_context(error_code, **kwargs):
     context = base_context(**kwargs)
     if error_code is not None:
         context.update({'error_msg' : _error_codes[error_code]})
-    context['types'] = ['pid', 'time_since', 'simple']
-    return context
-
-def alarms_context(**kwargs):
-    context = base_context(**kwargs)
-    context['aggregations'] = sorted(db.Distinct('settings', 'alarm_aggregations', 'name'))
     context['types'] = ['pid', 'time_since', 'simple']
     return context
 

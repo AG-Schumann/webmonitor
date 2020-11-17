@@ -1,0 +1,73 @@
+{% extends "control/base.html" %}
+<!-- runs_todo.html -->
+
+{% block headers %}
+    <script src="/static/js/scripts_daq_runs.js"></script>
+{% endblock %}
+
+{% block subtitle %}upcoming runs database{% endblock %}
+
+{% block content %}
+<div class="runstablediv" id="tablediv">
+    <h4>Select experiment:</h4>
+    <select id="exp_name" onclick="UpdateUpcomingRuns()">
+        <option value="-">Select experiment here</option>
+        {% for experiment in experiments %}
+        <option value={{ experiment }}>{{ experiment }}</option>
+        {% endfor %}
+    </select>
+    <button onclick="ClearUpcomingRuns()">clear runlist</button>
+    <button onclick="RemoveUpcomingRuns()">remove selected runs</button>
+    
+    <table class="runstable">
+        <thead>
+            <tr class="tabheader">
+                <th>Run mode</th>
+                <th>Run duration</th>
+                <th>Comment</th>
+                <th>Config override</th>
+            </tr>
+        </thead>
+        <tbody id="runs_table_body">
+            <tr><td colspan="9">Nothing here yet, try selecting an experiment</td></tr>
+        </tbody>
+        <tfoot></tfoot>
+    </table>
+</div> <!-- runstablediv -->
+
+
+<div class="modal" id="rundetail">
+    <div class="modal_content">
+    <button value="Hide" onclick="HideTabs()">Hide</button>
+    <ul>
+        <li id="d_run_mode">Run mode:</li>
+        <li id="d_run_dur">Run duration:</li>
+        <li id="d_run_dur">Comment:</li>
+        <li id="d_run_dur">Config override:</li>
+    </ul><br>
+    <form action="/control/runs/update_run/" method="POST">
+        {% csrf_token %}
+        <fieldset>
+            <legend>Tags</legend>
+            <input type="text" hidden id="exp_name_h" name="exp_name">
+            Comment: <input type="text" id="d_run_comment" name="run_comment"
+                                                           placeholder="Comment"><br>
+            <span>Remove tag?</span>
+            <ul id="d_run_tags"></ul>
+            <button type="submit" value="Submit changes">Submit changes</button>
+            <button type="reset" value="Reset">Reset</button>
+        </fieldset>
+    </form><br>
+    <u>Run Config:</u>
+    <p id="d_run_config" style="font-family: monospace;"></p>
+    </ul>
+    </div> <!-- rundetail content -->
+</div> <!-- rundetail -->
+
+
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+    </script>
+{% endblock %}

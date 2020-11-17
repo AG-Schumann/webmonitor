@@ -16,6 +16,12 @@ function GetReadingDetails(sensor_name, reading_name) {
     if (reading_name.length == 0) {
         $("#rd_legend").html("No reading selected");
         $("#rd_alarm_list").html("");
+        $("#pid_checkbox").prop("checked", false);
+        $("#time_since_checkbox").prop("checked", false);
+        $("#simple_checkbox").prop("checked", false);
+        $("#pid_body").html("");
+        $("#time_since_body").html("");
+        $("#simple_body").html("");
         $("#rd_cfg_list").html("");
         $("#rd_runmode").html("");
         $("#rd_status").html("");
@@ -33,6 +39,16 @@ function GetReadingDetails(sensor_name, reading_name) {
             for (var key in data['value']) {
                 $("#" + key).val(data['value'][key]);
             }
+            var bool_map = {"true": true, "false": false}
+            var style_map = {"true": "table-header-group", "false": "none"}
+            $("#pid_checkbox").prop("checked", bool_map[data['value']['pid_enabled']]);
+            $("#time_since_checkbox").prop("checked", bool_map[data['value']['time_since_enabled']]);
+            $("#simple_checkbox").prop("checked", bool_map[data['value']['simple_enabled']]);
+            document.getElementById('pid_body').style.display = style_map[data['value']['pid_enabled']];
+            document.getElementById('time_since_body').style.display = style_map[data['value']['time_since_enabled']];
+            document.getElementById('simple_body').style.display = style_map[data['value']['simple_enabled']];
+
+
         }
     });
 }
@@ -86,7 +102,8 @@ function LoadHostSettings(host_name) {
                 $("#" + key).val(data['value'][key]);
                 console.log(key + ' ' + data['value'][key]);
             }
-        $("#hostbtn").attr("disabled", false);
+        $("#grafana").attr("src", data['html']['grafana'])
+        $("#pancake_hostbtn").attr("disabled", false);
         });
 }
 

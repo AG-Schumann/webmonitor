@@ -10,7 +10,7 @@
 {% block content %}
 <div class="runstablediv" id="tablediv">
     <h4>Select experiment:</h4>
-    <select id="exp_name">
+    <select id="exp_name"  onclick="LoadRuns()">
         {% for experiment in experiments %}
         <option value={{ experiment }}>{{ experiment }}</option>
         {% endfor %}

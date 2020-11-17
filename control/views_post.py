@@ -12,9 +12,10 @@ import time
 def start(request):
     if not base.is_schumann_subnet(request.META):
         return redirect('main', msgcode='err_not_auth')
-    if base.CurrentStatus() != 'idle':
-        return redirect('main', msgcode='err_not_idle')
     params = request.POST
+    
+    base.db['djangostatus'].insert({"params":params})
+    
     kwargs = {'mode' : params['mode'],
             'goal' : 'arm',
             }
@@ -25,24 +26,51 @@ def start(request):
             return redirect('main', msgcode='err_invalid_json')
     else:
         kwargs['config_override'] = {}
-    base.UpdateDaqspatcher(request, **kwargs)
-    time.sleep(3)  # one sec for dispatcher, one for daq, one extra
-    for _ in range(10):
-        status = base.CurrentStatus()
-        if status not in ['arming','armed']:
+        
+    if (not "button" in params) or (params["button"] == "Start"):
+        if base.CurrentStatus() != 'idle':
+            return redirect('main', msgcode='err_not_idle')
+
+        base.db['djangostatus'].insert({"COMMAND_Start":1})
+        base.UpdateDaqspatcher(request, **kwargs)
+      #  base.db['djangostatus'].insert({"status":"start sleep(5)"})
+      #  time.sleep(5)  # one sec for dispatcher, one for daq, one extra
+        for _ in range(15):
+            status = base.CurrentStatus()
+            
+            if status not in ['arming','armed', "idle"] :
+                return redirect('main', msgcode='err_not_arming')
+            if status == 'armed':
+                break
+            time.sleep(1)
+        
+        if status != 'armed':
+            base.db['djangostatus'].insert({"status":"not armed"})
             return redirect('main', msgcode='err_not_armed')
-        if status == 'armed':
-            break
-        time.sleep(1)
+        try:
+            duration = int(request.POST['duration'])*60
+        except KeyError:
+            duration = 180
+        
+        base.UpdateDaqspatcher(request, duration=duration, goal='start',
+                comment=request.POST['comment'])
+        return redirect('main', msgcode='msg_start')
+    
+    elif params["button"] == "Append":
+        base.db['djangostatus'].insert({"COMMAND_Append":1})
+        
+        list_params_tosave = ["duration", "mode", "comment", "config_override"]
+        params_tosave = {key: params[key] for key in list_params_tosave}
+        params_tosave["experiment"] = "xebra"
+        
+        base.db['djangostatus'].insert(params_tosave)
+        base.db['runs_todo'].insert(params_tosave)
+        return redirect('main', msgcode='msg_start')
+        
+        
     else:
-        return redirect('main', msgcode='err_not_armed')
-    try:
-        duration = int(request.POST['duration'])*60
-    except KeyError:
-        duration = 180
-    base.UpdateDaqspatcher(request, duration=duration, goal='start',
-            comment=request.POST['comment'])
-    return redirect('main', msgcode='msg_start')
+        return redirect('main', msgcode='msg_start')
+        
 
 @require_POST
 def stop(request):
@@ -54,10 +82,25 @@ def stop(request):
     return redirect('main', msgcode='msg_stop')
 
 @require_POST
+def pause_toggle(request):
+    if not base.is_schumann_subnet(request.META):
+        return redirect('main', msgcode='err_not_auth')
+    current_status=base.db['system_control'].find_one({'subsystem' : 'daqspatcher'})["worklist"]
+    
+    if current_status == "running":
+        new_state = "paused"
+    else:
+        new_state = "running"
+    
+    base.UpdateDaqspatcher(request, worklist=new_state)
+    return redirect('main')
+
+@require_POST
 def led(request):
     if not base.is_schumann_subnet(request.META):
         return redirect('main', msgcode='err_not_auth')
     base.UpdateDaqspatcher(request, goal='led')
+    base.UpdateDaqspatcher(request, run_duration='180')
     return redirect('main', msgcode='msg_led')
 
 @require_POST

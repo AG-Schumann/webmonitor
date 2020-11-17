@@ -40,8 +40,11 @@ def user(meta):
 
 def is_schumann_subnet(meta):
     ip = user(meta)['client_addr']
+       
+    if ip in ["::1", "127.0.0.1", "192.168.131.6"]:
+        return True
     subnet, _ = ip.rsplit('.', maxsplit=1)
-    return subnet=='10.4.73'
+    return (subnet=='10.4.73')
 
 def base_context(msgcode=None):
     modes = db['options'].distinct('name', {'detector' : {'$ne' : 'include'}})

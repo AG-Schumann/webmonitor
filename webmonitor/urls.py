@@ -18,7 +18,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('xebra/', include('xebra.urls')),
-    #path('pancake/', include('pancake.urls')),
+    path('pancake/', include('pancake.urls')),
     path('control/', include('control.urls')),
     path('admin/', admin.site.urls),
 ]
