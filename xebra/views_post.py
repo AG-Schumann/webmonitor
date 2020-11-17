@@ -60,7 +60,7 @@ def log_command(request):
     if not base.is_schumann_subnet(request.META):
         return redirect('/xebra/error')
     user = base.client(request.META)
-    command = f'{request.POST["sensor_name"]} {request.POST["command"]}'
+    command = f'{request.POST["s_name_command"]} {request.POST["command"]}'
     dispatcher.process_command(base.db, command, user=user)
     return redirect('/xebra/detail/')
 

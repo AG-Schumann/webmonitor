@@ -56,6 +56,7 @@ def get_sensor_details(request, sensor_name=""):
     ret['value']['s_name_startstop'] = sensor_name
     ret['value']['s_name_rd'] = sensor_name
     ret['value']['s_name_addr'] = sensor_name
+    ret['value']['s_name_command'] = sensor_name
     ret['html']['subtitle'] = "Sensor detail: " + sensor_name
 
     ret['html']['reading_dropdown'] = '<option value="" selected>Select reading</option>'
