@@ -16,7 +16,7 @@
   <fieldset>
     <form action="/xebra/change_aggregation/" method="post">
         {%csrf_token %}
-        <font id="name_field" hidden> Name: </font> <input type="text" id="agg_name" name="agg_name" hidden> <br>
+        <span id="name_field" hidden> Name: </span> <input type="text" id="agg_name" name="agg_name" hidden> <br>
         Operation: <select name="operation" id="operation"></select><br>
         Time window: <input type="number" min="1" max="600" step="1" id="time_window" name="time_window">
         seconds <br>

@@ -1,8 +1,6 @@
-from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.shortcuts import redirect
 from Doberman import dispatcher
-import datetime
 from math import isclose
 from . import views_get
 from . import base
@@ -84,10 +82,10 @@ def change_reading(request):
         if old_vals[key] != new_vals:
             base.db.set_reading_setting(sensor, reading_name, key, new_val)
             base.db.log_update(name=sensor,
-                              reading=reading_name,
-                              key=key,
-                              value=new_val,
-                              **user)
+                               reading=reading_name,
+                               key=key,
+                               value=new_val,
+                               **user)
 
     old_alarms = old_vals['alarms']
     new_alarms = []
@@ -165,9 +163,10 @@ def change_aggregation(request):
         alarms.append(rd + ',' + ty)
     doc = {'name': name, 'operation': operation, 'time_window': time_window, 'alarms': alarms}
     if name in base.db.distinct('settings', 'alarm_aggregations', 'name'):
-        base.db.find_one_and_update('settings', 'alarm_aggregations', {'name': name}, {'$set': {'operation': operation}})
         base.db.find_one_and_update('settings', 'alarm_aggregations', {'name': name},
-                                 {'$set': {'time_window': time_window}})
+                                    {'$set': {'operation': operation}})
+        base.db.find_one_and_update('settings', 'alarm_aggregations', {'name': name},
+                                    {'$set': {'time_window': time_window}})
         base.db.find_one_and_update('settings', 'alarm_aggregations', {'name': name}, {'$set': {'alarms': alarms}})
     else:
         # add new aggregation
