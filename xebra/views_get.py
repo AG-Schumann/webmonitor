@@ -11,7 +11,7 @@ def get_alarms(request):
     docs = []
     sort = [('_id', -1)]
     try:
-        for row in base.db.read_from_database('logging', 'alarm_history', sort=sort, limit=10):
+        for row in base.db.read_from_db('logging', 'alarm_history', sort=sort, limit=10):
             docs.append({
                 'when': dt.fromtimestamp(int(str(row['_id'])[:8], 16)).strftime("%Y-%m-%d %H:%M:%S"),
                 'message': row['msg'].replace("<", "").replace(">", ""),
@@ -34,7 +34,7 @@ def get_logs(request):
     }
     sort = [('_id', -1)]
     try:
-        for row in base.db.read_from_database('logging', 'logs', sort=sort, limit=10):
+        for row in base.db.read_from_db('logging', 'logs', sort=sort, limit=10):
             docs.append({
                 'when': dt.fromtimestamp(int(str(row['_id'])[:8], 16)).strftime("%Y-%m-%d %H:%M:%S"),
                 'level': levels[int(row['level'])],

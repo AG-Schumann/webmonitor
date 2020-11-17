@@ -12,7 +12,7 @@ urlpatterns = [
                        name='index'),
 
                   path('getoverview',
-                       views_get.getoverview,
+                       views_get.get_overview,
                        name='getoverview'),
 
                   path('getalarms',
