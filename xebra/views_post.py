@@ -201,7 +201,7 @@ def add_new_contact(request):
                'first_name': info['firstname'],
                'last_name': info['lastname'],
                }
-    base.db.insert_into_database('settings', 'contacts', contact)
+    base.db.insert_into_db('settings', 'contacts', contact)
     base.db.log_update(field='contacts', new=info['firstname'] + info['lastname'][0], **user)
     return redirect('/xebra/contacts')
 
