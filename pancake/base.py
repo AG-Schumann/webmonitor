@@ -66,7 +66,7 @@ def index_context(**kwargs):
 def contact_context(**kwargs):
     context = base_context(**kwargs)
     contacts = []
-    for contact in db.read_from_database('settings', 'contacts'):
+    for contact in db.read_from_db('settings', 'contacts'):
         if contact['name'] in ['MarcS', 'SebastianL']:
             continue
         contacts.append({'name': contact['name'], 'status': contact['status']})
