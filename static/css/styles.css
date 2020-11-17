@@ -15,20 +15,27 @@
 }
 
 table, th, td {
-    border: 1px solid black;
+    border: 1px solid #5D5C61;
     border-collapse: collapse;
     text-align: center;
-    padding: 5px;
-}
-
-table {
-    width: 100%;
+    padding: 7px;
 }
 
 th {
     background-color: #557a95;
     color: white;
 }
+
+td {
+    background-color: #7395AE;
+    color: white;
+}
+
+table {
+    width: 100%;
+}
+
+
 
 .progress_bar_div {
     width: 80%;

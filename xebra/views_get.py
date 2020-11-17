@@ -239,11 +239,8 @@ def get_overview(request):
             tabs[key] = '<tr>'
             for sensor_name, sensor_doc in status_doc['sensors'].items():
                 tabs[
-                    key] += f'<td colspan="4" style="background-color:#7395AE; color:#ffffff">{sensor_name}: last heartbeat {sensor_doc["last_heartbeat"]:.1f} seconds ago</td>'
-                tabs[key] += '<tr><td style="background-color:#7395AE; color:#ffffff">Description</td>'
-                tabs[key] += '<td style="background-color:#7395AE; color:#ffffff">Value</td>'
-                tabs[key] += '<td style="background-color:#7395AE; color:#ffffff">Time</td>'
-                tabs[key] += '<td style="background-color:#7395AE; color:#ffffff">Runmode</td></tr>'
+                    key] += f'<td colspan="4">{sensor_name}: last heartbeat {sensor_doc["last_heartbeat"]:.1f} seconds ago</td>'
+                tabs[key] += '<tr><td>Description</td><td>Value</td><td>Time</td><td Runmode</td></tr>'
                 for reading_name, reading_doc in sensor_doc['readings'].items():
                     tabs[key] += '<tr>'
                     tabs[key] += f'<td> {reading_doc["description"]} </td>'
