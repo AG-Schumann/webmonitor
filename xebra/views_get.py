@@ -249,7 +249,7 @@ def get_overview(request):
                     if reading_doc["status"] == "online":
                         tabs[key] += f'<td> {latest_values[reading_name]["value"]:.3g} </td>'
                         tabs[key] += f'<td> {latest_values[reading_name]["time"]:.1f} sec</td>'
-                        tabs[key] += f'<td> {reading_doc["runmode"][0]} </td>'
+                        tabs[key] += f'<td> {reading_doc["runmode"]} </td>'
                     else:
                         tabs[key] += '<td colspan=3 style="color:#FF0000">Offline</td>'
                     tabs[key] += '</tr><tr>'
@@ -264,7 +264,7 @@ def get_shifts(request, start, end):
     start = datetime.datetime.fromisoformat(start)
     end = datetime.datetime.fromisoformat(end)
     shifts = []
-    for shift in base.db.read_from_database('settings', 'shifts',
+    for shift in base.db.read_from_db('settings', 'shifts',
                                           {'end': {'$gte': start},
                                            'start': {'$lte': end}}):
         shifts.append({
@@ -280,7 +280,7 @@ def get_shifts(request, start, end):
 
 @require_GET
 def get_shift_detail(request, date):
-    shift = base.db.read_from_database('settings', 'shifts',
+    shift = base.db.read_from_db('settings', 'shifts',
                                      {'key': date}, onlyone=True)
     if shift is None:
         return JsonResponse({})
