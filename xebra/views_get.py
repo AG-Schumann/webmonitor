@@ -236,10 +236,10 @@ def get_overview(request):
         else:
             tabs[f'{hostname}_head'] = f'{hostname}: last heartbeat {status_doc["last_heartbeat"]:.1f} seconds ago'
             key = f'{hostname}_body'
-            tabs[key] = '<tr>'
+            tabs[key] = ''
             for sensor_name, sensor_doc in status_doc['sensors'].items():
-                tabs[
-                    key] += f'<th colspan="4">{sensor_name}: last heartbeat {sensor_doc["last_heartbeat"]:.1f} seconds ago</th>'
+                tabs[key] += f'<tr><td>'
+                tabs[key] += f'<table class="sensor_table"><tr><th colspan="4">{sensor_name}: last heartbeat {sensor_doc["last_heartbeat"]:.1f} seconds ago</th></tr>'
                 tabs[key] += '<tr><th>Description</th><th>Value</th><th>Time</th><th Runmode</th></tr>'
                 for reading_name, reading_doc in sensor_doc['readings'].items():
                     tabs[key] += '<tr>'
@@ -250,10 +250,8 @@ def get_overview(request):
                         tabs[key] += f'<td> {reading_doc["runmode"]} </td>'
                     else:
                         tabs[key] += '<td colspan=3 style="color:#FF0000">Offline</td>'
-                    tabs[key] += '</tr><tr>'
-                tabs[key] = tabs[key][:-4]
-                tabs[key] += '</tr><tr class="blank_row"><td colspan="4"></td></tr><tr>'
-            tabs[key] = tabs[key][:-4]
+                    tabs[key] += '</tr>'
+                tabs[key] += '</table></td></tr>'
     return JsonResponse(tabs)
 
 

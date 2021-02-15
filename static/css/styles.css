@@ -13,6 +13,18 @@
     padding: 2px;
     border-radius: 3px;
 }
+.host_table {
+    width: 90%;
+    margin-left: 5%;
+    margin-right: 5%;
+    padding: 10px;
+}
+
+.sensor_table th{
+    background-color: #7395ae;
+    padding: 10px
+}
+
 
 table, th, td {
     border: 1px solid #5D5C61;

@@ -5,7 +5,8 @@
     <div style="background-color:#eeeeee;padding:5px;border-radius:5px">
         <h2 style="background-color:#dddddd;padding:2px;border-radius:2px">Current status</h2>
         {% for hostname in hosts %}
-            <table>
+        <div class="host_table">    
+        <table>
                 <thead>
                     <tr>
                         <th colspan="4" id="{{ hostname }}_head">{{ hostname }}</th>
@@ -15,6 +16,7 @@
                     <tr><td colspan="4">Loading!</td></tr>
                 </tbody>
             </table>
+        </div>
         {% endfor %}
     </div>
     <br>

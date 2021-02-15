@@ -138,17 +138,6 @@ def change_reading(request):
         if new_alarm != old_alarm:
             base.db.update_alarm(reading_name, new_alarm)
 
-    for rm, cfg in old_vals['config'].items():
-        new_val = int(new_vals[f'{rm}_level'])
-        if cfg['level'] != new_val:
-            base.db.find_one_and_update('settings', 'readings', {'name': reading_name},
-                                     {'$set': {f'config.{rm}.level': new_val}})
-            base.db.log_update(name=sensor,
-                               reading=reading_name,
-                               key=f'config.{rm}.level',
-                               value=new_val,
-                               **user)
-
     return redirect('/pancake/detail/')
 
 
