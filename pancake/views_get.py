@@ -18,7 +18,7 @@ def get_alarms(request):
             })
         return JsonResponse({'docs': docs})
     except Exception as e:
-        print("getalarms: %s" % e)
+        print("get_alarms: %s" % e)
         return JsonResponse({'docs': []})
 
 
@@ -43,7 +43,7 @@ def get_logs(request):
             })
         return JsonResponse({'docs': docs})
     except Exception as e:
-        print('getlogs: %s' % e)
+        print('get_logs: %s' % e)
         return JsonResponse({'docs': []})
 
 
@@ -60,15 +60,19 @@ def get_sensor_details(request, sensor_name=""):
     ret['html']['subtitle'] = "Sensor detail: " + sensor_name
 
     ret['html']['reading_dropdown'] = '<option value="" selected>Select reading</option>'
-    for reading_name in sensor_doc['readings']:
-        ret['html']['reading_dropdown'] += f'<option value="{reading_name}">{reading_name}</option>'
+    if 'multi' in sensor_doc:
+        for reading_name in sensor_doc['multi']:
+            ret['html']['reading_dropdown'] += f'<option value="{reading_name}">{reading_name}</option>'
+    else:
+        for reading_name in sensor_doc['readings']:
+            ret['html']['reading_dropdown'] += f'<option value="{reading_name}">{reading_name}</option>'
 
     if 'address' in sensor_doc:
         s = ''
         s += '<legend>Addressing</legend>'
         if 'ip' in sensor_doc['address']:
             s += f'IP: <input type="text" name="ip" value="{sensor_doc["address"]["ip"]}"'
-            s += r' pattern="((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)">'
+            s += r' pattern="(:?(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)">'
             s += '<br>'
             s += f'Port: <input type="number" name="port" value="{int(sensor_doc["address"]["port"])}" step="1">'
             s += '<br>'
@@ -101,11 +105,6 @@ def get_reading_detail(request, sensor_name="", reading_name=""):
     ret = {'html': {}, 'value': {}}
     if sensor_name not in base.db.distinct('settings', 'sensors', 'name'):
         return HttpResponseNotModified()
-    readings = base.db.get_sensor_setting(sensor_name, 'readings')
-    if type(readings) is dict:
-        readings = list(readings.keys())
-    if reading_name not in readings:
-        return HttpResponseNotModified()
     reading = base.db.get_reading_setting(sensor_name, reading_name)
     ret['html']['rd_legend'] = "%s" % (reading['description'])
     ret['value']['rd_name'] = reading['name']
@@ -122,20 +121,25 @@ def get_reading_detail(request, sensor_name="", reading_name=""):
                 continue
             ret['html'][f'{al_type}_body'] += f'<tr><td align="left"> {parameter} </td>'
             if parameter == 'levels':
-                ret['html'][f'{al_type}_body'] += '<td>'
+                ret['html'][
+                    f'{al_type}_body'] += f'<td><ul id="{al_type}_levels" onload="update_delete_btns({al_type});">'
                 for i, (lo, hi) in enumerate(alarm['levels']):
                     ret['html'][
-                        f'{al_type}_body'] += f'<li>Level {i}: Low:<input type="number" name="{al_type}__al_{i}_0" value="{lo}" step="any"> High:<input type="number" name="{al_type}__al_{i}_1" value="{hi}" step="any"></li>'
-                ret['html'][f'{al_type}_body'] += '</td></tr>'
+                        f'{al_type}_body'] += f'<li>Level {i}: Low:<input type="number" name="{al_type}__al_{i}_0" value="{lo}" step="any"> High:<input type="number" name="{al_type}__al_{i}_1" value="{hi}" step="any"><button type="button" id="delete_{al_type}_{i}" onclick="$(this).parent().remove(); update_delete_btns(\'{al_type}\');">Delete</button></li>'
+                ret['html'][
+                    f'{al_type}_body'] += f'</ul><button type="button" onclick="AddLevel(\'{al_type}\')">Add level</button></td></tr>'
             elif parameter == 'max_duration':
-                ret['html'][f'{al_type}_body'] += '<td>'
+                ret['html'][f'{al_type}_body'] += f'<td><ul id="{al_type}_levels">'
                 for i, val in enumerate(alarm['max_duration']):
                     ret['html'][
-                        f'{al_type}_body'] += f'<li>Level {i}:<input type="number" name="{al_type}__max_duration_{i}" value="{val}" step="any"></li>'
+                        f'{al_type}_body'] += f'<li>Level {i}:<input type="number" name="{al_type}__max_duration_{i}" value="{val}" step="any"><button type="button" id="delete_{al_type}_{i}" onclick="$(this).parent().remove();">Delete</button></li>'
+                ret['html'][
+                    f'{al_type}_body'] += f'</ul><button type="button" onclick="AddLevel(\'{al_type}\')">Add level</button></td></tr>'
             else:
                 ret['value'][f'{al_type}_{parameter}'] = alarm[parameter]
                 ret['html'][
-                    f'{al_type}_body'] += f'<td align="left"> <input type="number" min="0" max="1000" step="1" id="{al_type}_{parameter}" name="{al_type}__{parameter}" ></tr>'
+                    f'{al_type}_body'] += f'<td align="left"> <input type="number" min="0" max="1000" step="0.1" id="{al_type}_{parameter}" name="{al_type}__{parameter}" ></tr>'
+
     ret['html']['rd_runmode'] = ''
     for rm in ['default', 'testing', 'recovery']:
         selected = 'selected' if rm == reading['runmode'] else ''
@@ -146,6 +150,50 @@ def get_reading_detail(request, sensor_name="", reading_name=""):
         selected = 'selected' if status == reading['status'] else ''
         ret['html']['rd_status'] += f'<option value="{status}" {selected}>{status}</option>'
 
+    return JsonResponse(ret)
+
+
+@require_GET
+def get_alarm_aggregation(request, name=""):
+    ret = {'html': {}, 'value': {}}
+    if name not in base.db.distinct('settings', 'alarm_aggregations', 'name'):
+        return HttpResponseNotModified()
+    doc = base.db.read_from_database('settings', 'alarm_aggregations', cuts={'name': name}, onlyone=True)
+    ret['value']['agg_name'] = doc['name']
+    ret['value']['time_window'] = doc['time_window']
+    ret['html']['operation'] = ''
+    for op in ['and', 'or']:
+        selected = 'selected' if op == doc['operation'] else ''
+        ret['html']['operation'] += f'<option value="{op}" {selected}>{op}</option>'
+    ret['html']['agg_list'] = ''
+    for alarm in doc['alarms']:
+        index = doc['alarms'].index(alarm)
+        rd_name = alarm.split(',')[0]
+        al_type = alarm.split(',')[1]
+        ret['html']['agg_list'] += f'<li><select name="{index}_rd" id="{index}_rd">'
+        ret['html']['rd_options'] = '<option value="none" selected> Select reading</option>'
+        for rd in base.db.distinct('settings', 'readings', 'name'):
+            ret['html']['rd_options'] += f'<option value="{rd}" >{rd}</option>'
+            selected = 'selected' if rd == rd_name else ''
+            ret['html']['agg_list'] += f'<option value="{rd}" {selected}>{rd}</option>'
+        ret['html']['agg_list'] += f'</select><select name="{index}_type" id={index}_type" >'
+        for ty in ['pid', 'time_since', 'simple']:
+            selected = 'selected' if ty == al_type else ''
+            ret['html']['agg_list'] += f'<option value="{ty}" {selected}>{ty}</option>'
+        ret['html'][
+            f'agg_list'] += f'</select><button type="button" id="delete_{index}" onclick="$(this).parent().remove();">Delete</button></li>'
+    return JsonResponse(ret)
+
+
+@require_GET
+def get_new_aggregation(request):
+    ret = {'html': {}, 'value': {}}
+    ret['html']['operation'] = '<option> Select operation selected></option>'
+    for op in ['and', 'or']:
+        ret['html']['operation'] += f'<option value="{op}" >{op}</option>'
+    ret['value']['agg_name'] = ''
+    ret['value']['time_window'] = ''
+    ret['html']['agg_list'] = ''
     return JsonResponse(ret)
 
 
@@ -187,16 +235,14 @@ def get_overview(request):
         else:
             tabs[f'{hostname}_head'] = f'{hostname}: last heartbeat {status_doc["last_heartbeat"]:.1f} seconds ago'
             key = f'{hostname}_body'
-            tabs[key] = '<tr>'
+            tabs[key] = ''
             for sensor_name, sensor_doc in status_doc['sensors'].items():
-                tabs[
-                    key] += f'<td colspan="4" style="background-color:#7395AE; color:#ffffff">{sensor_name}: last heartbeat {sensor_doc["last_heartbeat"]:.1f} seconds ago</td>'
-                tabs[key] += '<tr><td style="background-color:#7395AE; color:#ffffff">Description</td>'
-                tabs[key] += '<td style="background-color:#7395AE; color:#ffffff">Value</td>'
-                tabs[key] += '<td style="background-color:#7395AE; color:#ffffff">Time</td>'
-                tabs[key] += '<td style="background-color:#7395AE; color:#ffffff">Runmode</td></tr>'
+                tabs[key] += f'<tr><td>'
+                tabs[key] += f'<table class="sensor_table"><tr><th colspan="5">{sensor_name}: last heartbeat {sensor_doc["last_heartbeat"]:.1f} seconds ago</th></tr>'
+                tabs[key] += '<tr><th>Name</th><th>Description</th><th>Value</th><th>Time</th><th Runmode</th></tr>'
                 for reading_name, reading_doc in sensor_doc['readings'].items():
                     tabs[key] += '<tr>'
+                    tabs[key] += f'<td> {reading_name} </td>'
                     tabs[key] += f'<td> {reading_doc["description"]} </td>'
                     if reading_doc["status"] == "online":
                         tabs[key] += f'<td> {latest_values[reading_name]["value"]:.3g} </td>'
@@ -204,10 +250,8 @@ def get_overview(request):
                         tabs[key] += f'<td> {reading_doc["runmode"]} </td>'
                     else:
                         tabs[key] += '<td colspan=3 style="color:#FF0000">Offline</td>'
-                    tabs[key] += '</tr><tr>'
-                tabs[key] = tabs[key][:-4]
-                tabs[key] += '</tr><tr class="blank_row"><td colspan="4"></td></tr><tr>'
-            tabs[key] = tabs[key][:-4]
+                    tabs[key] += '</tr>'
+                tabs[key] += '</table></td></tr>'
     return JsonResponse(tabs)
 
 
@@ -217,8 +261,8 @@ def get_shifts(request, start, end):
     end = datetime.datetime.fromisoformat(end)
     shifts = []
     for shift in base.db.read_from_db('settings', 'shifts',
-                                            {'end': {'$gte': start},
-                                             'start': {'$lte': end}}):
+                                          {'end': {'$gte': start},
+                                           'start': {'$lte': end}}):
         shifts.append({
             'id': shift['key'],
             'start': shift['start'].isoformat(),
@@ -233,7 +277,7 @@ def get_shifts(request, start, end):
 @require_GET
 def get_shift_detail(request, date):
     shift = base.db.read_from_db('settings', 'shifts',
-                                       {'key': date}, onlyone=True)
+                                     {'key': date}, onlyone=True)
     if shift is None:
         return JsonResponse({})
     return JsonResponse({'primary': shift['shifters'][0],
@@ -241,6 +285,7 @@ def get_shift_detail(request, date):
                          'secondary2': shift['shifters'][2],
                          'start': shift['start'].isoformat(sep=' ')[:16],
                          'end': shift['end'].isoformat(sep=' ')[:16],
+                         'shift_key': shift['key'],
                          })
 
 

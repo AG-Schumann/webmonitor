@@ -27,10 +27,6 @@ urlpatterns = [
                           views_render.detail,
                           name='detail'),
 
-                  #        re_path(r'^getreadings/(?P<name>[^/]+)/$',
-                  #                views_get.getreadings,
-                  #                name='getreadings'),
-
                   re_path(
                       r'^get_shifts/(?P<start>20(?:19|2[0-9])-(?:0[1-9]|1[012])-(?:[012][0-9]|3[01]))/(?P<end>20('
                       r'?:19|2[0-9])-(?:0[1-9]|1[012])-(?:[012][0-9]|3[01]))/$',
@@ -41,14 +37,6 @@ urlpatterns = [
                       r'^get_shift_detail/(?P<date>(?:2019|202[0-9])-(?:0[1-9]|1[012])-(?:0[1-9]|[12][0-9]|3[01]))/$',
                       views_get.get_shift_detail,
                       name='get_shift_detail'),
-
-                  path('caen_hv',
-                       views_render.pmts,
-                       name='caen_hv'),
-
-                  re_path(r'^startstop/$',
-                          views_post.startstop,
-                          name='startstop'),
 
                   re_path(r'^change_address/$',
                           views_post.change_address,
@@ -98,15 +86,4 @@ urlpatterns = [
                           views_post.add_new_contact,
                           name='add_new_contact'),
 
-                  re_path(r'^get_pmts/(?P<speed>fast|slow)/$',
-                          views_get.get_pmts,
-                          name='get_pmts'),
-
-                  re_path(r'^update_pmts/$',
-                          views_post.update_pmts,
-                          name='update_pmts'),
-
-                  re_path(r'^scram/$',
-                          views_post.scram,
-                          name='scram'),
               ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

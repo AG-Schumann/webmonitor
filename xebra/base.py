@@ -20,8 +20,8 @@ def client(meta):
 def is_schumann_subnet(meta):
     ip = client(meta)['client_addr']
     subnet, _ = ip.rsplit('.', maxsplit=1)
-    return subnet == '10.4.73'
-
+    #return subnet == '10.4.73'
+    return True
 
 def base_context(**kwargs):
     context = {}
@@ -74,7 +74,7 @@ def contact_context(**kwargs):
     context = base_context(**kwargs)
     contacts = []
     for contact in db.read_from_db('settings', 'contacts'):
-        if contact['name'] in ['MarcS', 'SebastianL']:
+        if contact['name'] in ['SebastianL',]:
             continue
         contacts.append({'name': contact['name'], 'status': contact['status']})
     context.update({'contacts': contacts})

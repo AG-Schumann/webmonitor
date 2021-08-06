@@ -1,27 +1,9 @@
-from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.shortcuts import redirect
 from Doberman import dispatcher
-import datetime
 from math import isclose
 from . import views_get
 from . import base
-
-
-@require_POST
-def startstop(request):
-    if not base.is_schumann_subnet(request.META):
-        return redirect('/pancake/')
-    name = request.POST['sensor_name']
-    if name not in base.db.distinct('settings', 'sensors', 'name'):
-        return redirect('/pancake/detail/')
-    status = base.db.get_sensor_setting(name, 'status')
-    user = base.client(request.META)
-    if status == 'online':
-        dispatcher.process_command(base.db, f'stop {name}', user=user)
-    elif status == 'offline':
-        dispatcher.process_command(base.db, f'start {name}' % name, user=user)
-    return redirect('/pancake/detail/')
 
 
 @require_POST
@@ -145,7 +127,6 @@ def change_reading(request):
 def change_default(request):
     if not base.is_schumann_subnet(request.META):
         return redirect('/pancake/')
-    info = request.POST
     new_values = request.POST
     host = new_values['host_name']
     if host not in base.db.distinct('common', 'hosts', 'hostname'):
@@ -164,15 +145,17 @@ def change_default(request):
 @require_POST
 def update_shift(request):
     if not base.is_schumann_subnet(request.META):
-        return redirect('/pancake/')
+        return redirect('/xebra/error')
     info = request.POST
     user = base.client(request.META)
     shift_key = info['shift_key']
     shifters = [info[k] if info[k] != 'None' else '' for k in ['primary', 'secondary1', 'secondary2']]
-    base.db.update_database('settings', 'shifts', cuts={'shift_key': shift_key},
-                           updates={'$set': {'shifters': shifters}})
-    base.db.log_update(field='contacts', shift_key=shift_id, shifters=shifters, **user)
-    return redirect('/pancake/contacts/')
+    base.db.find_one_and_update('settings',
+                                'shifts',
+                                {'key': shift_key},
+                                {'$set': {'shifters': shifters}})
+    base.db.log_update(field='contacts', shift_key=shift_key, shifters=shifters, **user)
+    return redirect('/pancake/contacts')
 
 
 @require_POST

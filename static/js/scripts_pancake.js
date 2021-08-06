@@ -145,9 +145,6 @@ function UpdateAlarms() {
 }
 
 function UpdateShift(ev) {
-    if (new Date() > ev.start) {
-        return;
-    }
     $("#shift_modal").css("display", "block");
     var start = ev.start.toISOString().slice(0,10);
     $.getJSON('/pancake/get_shift_detail/' + start + '/', function(data) {

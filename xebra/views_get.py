@@ -60,8 +60,12 @@ def get_sensor_details(request, sensor_name=""):
     ret['html']['subtitle'] = "Sensor detail: " + sensor_name
 
     ret['html']['reading_dropdown'] = '<option value="" selected>Select reading</option>'
-    for reading_name in sensor_doc['readings']:
-        ret['html']['reading_dropdown'] += f'<option value="{reading_name}">{reading_name}</option>'
+    if 'multi' in sensor_doc:
+        for reading_name in sensor_doc['multi']:
+            ret['html']['reading_dropdown'] += f'<option value="{reading_name}">{reading_name}</option>'
+    else:
+        for reading_name in sensor_doc['readings']:
+            ret['html']['reading_dropdown'] += f'<option value="{reading_name}">{reading_name}</option>'
 
     if 'address' in sensor_doc:
         s = ''
@@ -99,13 +103,6 @@ def get_sensor_details(request, sensor_name=""):
 @require_GET
 def get_reading_detail(request, sensor_name="", reading_name=""):
     ret = {'html': {}, 'value': {}}
-    if sensor_name not in base.db.distinct('settings', 'sensors', 'name'):
-        return HttpResponseNotModified()
-    readings = base.db.get_sensor_setting(sensor_name, 'readings')
-    if type(readings) is dict:
-        readings = list(readings.keys())
-    if reading_name not in readings:
-        return HttpResponseNotModified()
     reading = base.db.get_reading_setting(sensor_name, reading_name)
     ret['html']['rd_legend'] = "%s" % (reading['description'])
     ret['value']['rd_name'] = reading['name']
